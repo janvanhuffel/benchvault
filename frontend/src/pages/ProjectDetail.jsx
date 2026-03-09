@@ -1,3 +1,127 @@
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { getProjectRuns } from "../api";
+
 export default function ProjectDetail() {
-  return <div>Project Detail</div>;
+  const { name } = useParams();
+  const navigate = useNavigate();
+  const [runs, setRuns] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState(new Set());
+  const [filters, setFilters] = useState({
+    dataset: "",
+    datasetVersion: "",
+    modelName: "",
+    modelVersion: "",
+  });
+
+  useEffect(() => {
+    getProjectRuns(name)
+      .then(setRuns)
+      .finally(() => setLoading(false));
+  }, [name]);
+
+  // Client-side filtering
+  const filtered = runs.filter((r) => {
+    if (filters.dataset && r.dataset !== filters.dataset) return false;
+    if (filters.datasetVersion && r.dataset_version !== filters.datasetVersion) return false;
+    if (filters.modelName && r.model_name !== filters.modelName) return false;
+    if (filters.modelVersion && r.model_version !== filters.modelVersion) return false;
+    return true;
+  });
+
+  // Extract unique values for filter dropdowns
+  const unique = (key) => [...new Set(runs.map((r) => r[key]))].sort();
+
+  // Extract all metric names across all runs
+  const metricNames = [...new Set(runs.flatMap((r) => r.metrics.map((m) => m.metric_name)))].sort();
+
+  // Toggle selection
+  const toggle = (id) => {
+    const next = new Set(selected);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelected(next);
+  };
+
+  // Get metric value for a run
+  const getMetric = (run, metricName) => {
+    const m = run.metrics.find((metric) => metric.metric_name === metricName);
+    return m ? m.value.toFixed(4) : "\u2014";
+  };
+
+  const handleCompare = () => {
+    navigate(`/compare?run_ids=${[...selected].join(",")}`);
+  };
+
+  if (loading) return <p>Loading runs...</p>;
+
+  return (
+    <div>
+      <h1>{decodeURIComponent(name)}</h1>
+
+      <div className="filters">
+        {/* Filter dropdowns */}
+        <select value={filters.dataset} onChange={(e) => setFilters({...filters, dataset: e.target.value})}>
+          <option value="">All datasets</option>
+          {unique("dataset").map((v) => <option key={v}>{v}</option>)}
+        </select>
+        <select value={filters.datasetVersion} onChange={(e) => setFilters({...filters, datasetVersion: e.target.value})}>
+          <option value="">All dataset versions</option>
+          {unique("dataset_version").map((v) => <option key={v}>{v}</option>)}
+        </select>
+        <select value={filters.modelName} onChange={(e) => setFilters({...filters, modelName: e.target.value})}>
+          <option value="">All models</option>
+          {unique("model_name").map((v) => <option key={v}>{v}</option>)}
+        </select>
+        <select value={filters.modelVersion} onChange={(e) => setFilters({...filters, modelVersion: e.target.value})}>
+          <option value="">All model versions</option>
+          {unique("model_version").map((v) => <option key={v}>{v}</option>)}
+        </select>
+
+        <button onClick={handleCompare} disabled={selected.size < 2}>
+          Compare Selected ({selected.size})
+        </button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>Model</th>
+            <th>Model Version</th>
+            <th>Dataset</th>
+            <th>Dataset Version</th>
+            <th>Epoch</th>
+            {metricNames.map((m) => <th key={m}>{m}</th>)}
+            <th>Date</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filtered.map((run) => (
+            <tr key={run.id}>
+              <td>
+                <input
+                  type="checkbox"
+                  checked={selected.has(run.id)}
+                  onChange={() => toggle(run.id)}
+                />
+              </td>
+              <td>{run.model_name}</td>
+              <td>{run.model_version}</td>
+              <td>{run.dataset}</td>
+              <td>{run.dataset_version}</td>
+              <td>{run.epoch ?? "\u2014"}</td>
+              {metricNames.map((m) => <td key={m}>{getMetric(run, m)}</td>)}
+              <td>{new Date(run.created_at).toLocaleDateString()}</td>
+              <td>{run.note || "\u2014"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {filtered.length === 0 && <p style={{ marginTop: "1rem" }}>No runs match the current filters.</p>}
+    </div>
+  );
 }
