@@ -8,6 +8,7 @@ from app.schemas import (
     RunResponse,
     MetricValueResponse,
 )
+from app.trash_cleanup import maybe_cleanup_trash
 
 router = APIRouter(prefix="/api")
 
@@ -45,9 +46,37 @@ def list_runs_for_project(project_name: str, db: Session = Depends(get_db)):
     if not project:
         raise HTTPException(404, detail=f"Project not found: {project_name}")
 
+    maybe_cleanup_trash(db)
+
     runs = (
         db.query(BenchmarkRun)
         .filter_by(project_id=project.id)
+        .filter(BenchmarkRun.deleted_at.is_(None))
+        .options(
+            joinedload(BenchmarkRun.project),
+            joinedload(BenchmarkRun.model_version),
+            joinedload(BenchmarkRun.dataset_version).joinedload(
+                BenchmarkRun.dataset_version.property.mapper.class_.dataset
+            ),
+            joinedload(BenchmarkRun.run_metrics).joinedload(
+                BenchmarkRun.run_metrics.property.mapper.class_.metric
+            ),
+        )
+        .all()
+    )
+    return [_run_to_response(r) for r in runs]
+
+
+@router.get("/projects/{project_name}/trash", response_model=list[RunResponse])
+def list_trashed_runs(project_name: str, db: Session = Depends(get_db)):
+    project = db.query(Project).filter_by(name=project_name).first()
+    if not project:
+        raise HTTPException(404, detail=f"Project not found: {project_name}")
+
+    runs = (
+        db.query(BenchmarkRun)
+        .filter_by(project_id=project.id)
+        .filter(BenchmarkRun.deleted_at.isnot(None))
         .options(
             joinedload(BenchmarkRun.project),
             joinedload(BenchmarkRun.model_version),

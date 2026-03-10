@@ -24,6 +24,7 @@ def compare_runs(
     runs = (
         db.query(BenchmarkRun)
         .filter(BenchmarkRun.id.in_(id_list))
+        .filter(BenchmarkRun.deleted_at.is_(None))
         .options(
             joinedload(BenchmarkRun.project),
             joinedload(BenchmarkRun.model_version),

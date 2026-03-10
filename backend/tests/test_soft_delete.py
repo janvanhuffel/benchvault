@@ -111,3 +111,50 @@ def test_delete_runs_empty_list_returns_422(seeded_client):
 def test_delete_runs_nonexistent_returns_404(seeded_client):
     response = seeded_client.request("DELETE", "/api/runs", json={"run_ids": [9999]})
     assert response.status_code == 404
+
+
+def test_deleted_runs_excluded_from_project_listing(seeded_client):
+    id1 = _submit_run(seeded_client, "m1")
+    _submit_run(seeded_client, "m2")
+
+    seeded_client.request("DELETE", "/api/runs", json={"run_ids": [id1]})
+
+    runs = seeded_client.get("/api/projects/test-project/runs").json()
+    assert len(runs) == 1
+    assert runs[0]["model_name"] == "m2"
+
+
+def test_deleted_runs_excluded_from_compare(seeded_client):
+    id1 = _submit_run(seeded_client, "m1")
+    id2 = _submit_run(seeded_client, "m2")
+
+    seeded_client.request("DELETE", "/api/runs", json={"run_ids": [id1]})
+
+    response = seeded_client.get(f"/api/compare?run_ids={id1},{id2}")
+    assert response.status_code == 404
+
+
+def test_trash_listing_shows_deleted_runs(seeded_client):
+    id1 = _submit_run(seeded_client, "m1")
+    _submit_run(seeded_client, "m2")
+
+    seeded_client.request("DELETE", "/api/runs", json={"run_ids": [id1]})
+
+    response = seeded_client.get("/api/projects/test-project/trash")
+    assert response.status_code == 200
+    trash = response.json()
+    assert len(trash) == 1
+    assert trash[0]["id"] == id1
+
+
+def test_trash_listing_empty_when_no_deleted_runs(seeded_client):
+    _submit_run(seeded_client, "m1")
+
+    response = seeded_client.get("/api/projects/test-project/trash")
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_trash_listing_nonexistent_project_returns_404(seeded_client):
+    response = seeded_client.get("/api/projects/nonexistent/trash")
+    assert response.status_code == 404
