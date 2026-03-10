@@ -29,13 +29,6 @@ class ProjectResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
-class DatasetResponse(BaseModel):
-    id: int
-    name: str
-
-    model_config = {"from_attributes": True}
-
-
 class DatasetCreateRequest(BaseModel):
     name: str
     modality: str | None = None
