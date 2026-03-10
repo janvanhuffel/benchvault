@@ -53,16 +53,23 @@ curl -X POST http://localhost:8000/api/runs \
     "model_version": "v1",
     "dataset": "COCO-2017",
     "dataset_version": "v1.0",
+    "epoch": 5,
     "metrics": {"accuracy": 0.92, "f1_score": 0.88}
   }'
 ```
 
 See [docs/api-payload.md](docs/api-payload.md) for the full API reference.
 
+To tear down and reset the database:
+
+```bash
+docker compose down -v
+```
+
 ## Running Tests
 
 ```bash
 cd backend
-pip install -r requirements-dev.txt
-pytest
+uv sync --group dev
+uv run pytest
 ```

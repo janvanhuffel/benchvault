@@ -55,7 +55,7 @@ export default function Compare() {
           <tr>
             <th>Metric</th>
             {data.runs.map((run) => (
-              <th key={run.id}>
+              <th key={run.id} className="metric-value">
                 {run.model_name} / {run.model_version}
                 <br />
                 <span className="text-secondary" style={{ fontWeight: "normal" }}>

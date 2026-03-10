@@ -163,7 +163,7 @@ export default function Leaderboard() {
                 <th>Rank</th>
                 <th>Model</th>
                 <th>Version</th>
-                <th>
+                <th className="metric-value">
                   {selectedMetric} ({higherIsBetter ? "\u2191" : "\u2193"})
                 </th>
               </tr>
