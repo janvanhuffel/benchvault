@@ -14,7 +14,10 @@ def compare_runs(
     run_ids: str = Query(..., description="Comma-separated run IDs"),
     db: Session = Depends(get_db),
 ):
-    id_list = [int(x.strip()) for x in run_ids.split(",") if x.strip()]
+    try:
+        id_list = [int(x.strip()) for x in run_ids.split(",") if x.strip()]
+    except ValueError:
+        raise HTTPException(422, detail="run_ids must be comma-separated integers")
     if not id_list:
         raise HTTPException(422, detail="run_ids must not be empty")
 
@@ -38,6 +41,10 @@ def compare_runs(
     missing = set(id_list) - found_ids
     if missing:
         raise HTTPException(404, detail=f"Run(s) not found: {sorted(missing)}")
+
+    # Preserve caller's requested order
+    id_order = {id_: idx for idx, id_ in enumerate(id_list)}
+    runs.sort(key=lambda r: id_order[r.id])
 
     run_responses = [_run_to_response(r) for r in runs]
 

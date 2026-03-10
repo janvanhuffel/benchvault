@@ -1,28 +1,30 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { compareRuns } from "../api";
 
 export default function Compare() {
   const [searchParams] = useSearchParams();
+  const idsParam = searchParams.get("run_ids");
   const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [fetchDone, setFetchDone] = useState(false);
 
-  useEffect(() => {
-    const idsParam = searchParams.get("run_ids");
-    if (!idsParam) {
-      setLoading(false);
-      setError("No runs selected for comparison. Go back and select runs.");
-      return;
-    }
-    const ids = idsParam.split(",").map(Number);
+  const fetchComparison = useCallback((ids) => {
     compareRuns(ids)
       .then(setData)
       .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [searchParams]);
+      .finally(() => setFetchDone(true));
+  }, []);
 
-  if (loading) return <p>Loading comparison...</p>;
+  useEffect(() => {
+    if (!idsParam) return;
+    const ids = idsParam.split(",").map(Number);
+    fetchComparison(ids);
+  }, [idsParam, fetchComparison]);
+
+  if (!idsParam)
+    return <p>No runs selected for comparison. Go back and select runs.</p>;
+  if (!fetchDone) return <p>Loading comparison...</p>;
   if (error) return <p>{error}</p>;
   if (!data) return null;
 

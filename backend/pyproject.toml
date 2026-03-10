@@ -4,16 +4,16 @@ version = "0.1.0"
 description = "BenchVault backend API"
 requires-python = ">=3.12"
 dependencies = [
-    "fastapi",
-    "uvicorn[standard]",
-    "sqlalchemy",
-    "psycopg2-binary",
-    "alembic",
-    "pydantic",
+    "fastapi>=0.135.1,<1.0",
+    "uvicorn[standard]>=0.41.0,<1.0",
+    "sqlalchemy>=2.0.48,<3.0",
+    "psycopg2-binary>=2.9.11,<3.0",
+    "alembic>=1.18.4,<2.0",
+    "pydantic>=2.12.5,<3.0",
 ]
 
 [dependency-groups]
 dev = [
-    "pytest",
-    "httpx",
+    "pytest>=9.0.2,<10.0",
+    "httpx>=0.28.1,<1.0",
 ]

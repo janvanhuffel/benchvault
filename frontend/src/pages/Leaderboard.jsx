@@ -20,28 +20,35 @@ export default function Leaderboard() {
 
   // Fetch runs when project changes
   useEffect(() => {
-    if (!selectedProject) {
-      setRuns([]);
-      return;
-    }
-    setLoading(true);
+    if (!selectedProject) return;
+    let cancelled = false;
     getProjectRuns(selectedProject)
-      .then(setRuns)
-      .finally(() => setLoading(false));
+      .then((data) => {
+        if (!cancelled) setRuns(data);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [selectedProject]);
 
+  // Derive runs: clear when no project selected
+  const effectiveRuns = selectedProject ? runs : [];
+
   // Derive filter options from runs
-  const datasets = [...new Set(runs.map((r) => r.dataset))].sort();
+  const datasets = [...new Set(effectiveRuns.map((r) => r.dataset))].sort();
   const datasetVersions = [
     ...new Set(
-      runs
+      effectiveRuns
         .filter((r) => !selectedDataset || r.dataset === selectedDataset)
         .map((r) => r.dataset_version)
     ),
   ].sort();
 
   // Filter runs
-  const filtered = runs.filter((r) => {
+  const filtered = effectiveRuns.filter((r) => {
     if (selectedDataset && r.dataset !== selectedDataset) return false;
     if (selectedDatasetVersion && r.dataset_version !== selectedDatasetVersion)
       return false;
@@ -81,6 +88,16 @@ export default function Leaderboard() {
     higherIsBetter ? b.value - a.value : a.value - b.value
   );
 
+  const handleProjectChange = (e) => {
+    const project = e.target.value;
+    setSelectedProject(project);
+    setSelectedDataset("");
+    setSelectedDatasetVersion("");
+    if (project) {
+      setLoading(true);
+    }
+  };
+
   return (
     <div>
       <h1>Leaderboard</h1>
@@ -88,11 +105,7 @@ export default function Leaderboard() {
       <div className="filters">
         <select
           value={selectedProject}
-          onChange={(e) => {
-            setSelectedProject(e.target.value);
-            setSelectedDataset("");
-            setSelectedDatasetVersion("");
-          }}
+          onChange={handleProjectChange}
         >
           <option value="">Select project</option>
           {projects.map((p) => (
