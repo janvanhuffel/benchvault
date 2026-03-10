@@ -500,3 +500,42 @@ select:focus {
   display: inline-block;
   text-align: center;
 }
+
+/* ===== Danger Button ===== */
+
+.btn-danger {
+  background: #e53e3e;
+  color: #fff;
+}
+
+.btn-danger:hover {
+  background: #c53030;
+}
+
+/* ===== Trash ===== */
+
+.trash-link {
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding-bottom: 2px;
+}
+
+.trash-link:hover {
+  color: var(--color-text);
+}
+
+.trash-info {
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.back-link {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}

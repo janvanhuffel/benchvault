@@ -46,3 +46,22 @@ export function createDataset(body) {
 export function createDatasetVersion(datasetName, body) {
   return postJson(`/api/datasets/${encodeURIComponent(datasetName)}/versions`, body);
 }
+
+export function deleteRuns(runIds) {
+  return fetch(`${API_URL}/api/runs`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ run_ids: runIds }),
+  }).then((r) => {
+    if (!r.ok) throw new Error(`API error: ${r.status}`);
+    return r.json();
+  });
+}
+
+export function restoreRuns(runIds) {
+  return postJson("/api/runs/restore", { run_ids: runIds });
+}
+
+export function getProjectTrash(projectName) {
+  return fetchJson(`/api/projects/${encodeURIComponent(projectName)}/trash`);
+}

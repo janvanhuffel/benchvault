@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { getProjectRuns } from "../api";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { getProjectRuns, deleteRuns } from "../api";
 
 export default function ProjectDetail() {
   const { name } = useParams();
@@ -17,10 +17,10 @@ export default function ProjectDetail() {
   const [sortBy, setSortBy] = useState(null);
   const [sortDir, setSortDir] = useState("desc");
 
+  const refresh = () => getProjectRuns(name).then(setRuns);
+
   useEffect(() => {
-    getProjectRuns(name)
-      .then(setRuns)
-      .finally(() => setLoading(false));
+    refresh().finally(() => setLoading(false));
   }, [name]);
 
   // Client-side filtering
@@ -92,6 +92,19 @@ export default function ProjectDetail() {
     navigate(`/compare?run_ids=${[...selected].join(",")}`);
   };
 
+  const handleDelete = () => {
+    const count = selected.size;
+    if (!window.confirm(`Are you sure you want to delete ${count} run${count !== 1 ? "s" : ""}? They can be restored from trash within 7 days.`)) {
+      return;
+    }
+    deleteRuns([...selected])
+      .then(() => {
+        setSelected(new Set());
+        return refresh();
+      })
+      .catch((err) => alert(`Delete failed: ${err.message}`));
+  };
+
   if (loading) return <p className="empty-state">Loading runs...</p>;
 
   return (
@@ -120,6 +133,12 @@ export default function ProjectDetail() {
         <button onClick={handleCompare} disabled={selected.size < 2}>
           Compare Selected ({selected.size})
         </button>
+        <button className="btn-danger" onClick={handleDelete} disabled={selected.size < 1}>
+          Delete Selected ({selected.size})
+        </button>
+        <Link to={`/projects/${encodeURIComponent(name)}/trash`} className="trash-link">
+          Trash
+        </Link>
       </div>
 
       <table>

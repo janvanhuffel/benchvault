@@ -3,6 +3,7 @@ import ProjectList from "./pages/ProjectList";
 import ProjectDetail from "./pages/ProjectDetail";
 import Compare from "./pages/Compare";
 import DatasetList from "./pages/DatasetList";
+import ProjectTrash from "./pages/ProjectTrash";
 import useTheme from "./hooks/useTheme";
 import "./App.css";
 
@@ -47,6 +48,7 @@ function App() {
         <Routes>
           <Route path="/" element={<ProjectList />} />
           <Route path="/projects/:name" element={<ProjectDetail />} />
+          <Route path="/projects/:name/trash" element={<ProjectTrash />} />
           <Route path="/compare" element={<Compare />} />
           <Route path="/datasets" element={<DatasetList />} />
         </Routes>
