@@ -14,6 +14,8 @@ export default function ProjectDetail() {
     modelName: "",
     modelVersion: "",
   });
+  const [sortBy, setSortBy] = useState(null);
+  const [sortDir, setSortDir] = useState("desc");
 
   useEffect(() => {
     getProjectRuns(name)
@@ -49,6 +51,42 @@ export default function ProjectDetail() {
     const m = run.metrics.find((metric) => metric.metric_name === metricName);
     return m ? m.value.toFixed(4) : "\u2014";
   };
+
+  const getMetricRaw = (run, metricName) => {
+    const m = run.metrics.find((metric) => metric.metric_name === metricName);
+    return m ? m.value : null;
+  };
+
+  const handleSort = (col) => {
+    if (sortBy === col) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortBy(col);
+      setSortDir("desc");
+    }
+  };
+
+  const sortIndicator = (col) => {
+    if (sortBy !== col) return "";
+    return sortDir === "asc" ? " \u2191" : " \u2193";
+  };
+
+  // Sort filtered runs
+  const sorted = [...filtered].sort((a, b) => {
+    if (!sortBy) return 0;
+    let aVal, bVal;
+    if (sortBy === "date") {
+      aVal = new Date(a.created_at).getTime();
+      bVal = new Date(b.created_at).getTime();
+    } else {
+      aVal = getMetricRaw(a, sortBy);
+      bVal = getMetricRaw(b, sortBy);
+    }
+    if (aVal === null && bVal === null) return 0;
+    if (aVal === null) return 1;
+    if (bVal === null) return -1;
+    return sortDir === "asc" ? aVal - bVal : bVal - aVal;
+  });
 
   const handleCompare = () => {
     navigate(`/compare?run_ids=${[...selected].join(",")}`);
@@ -93,13 +131,13 @@ export default function ProjectDetail() {
             <th>Dataset</th>
             <th>Dataset Version</th>
             <th>Epoch</th>
-            {metricNames.map((m) => <th key={m}>{m}</th>)}
-            <th>Date</th>
+            {metricNames.map((m) => <th key={m} className="sortable metric-value" onClick={() => handleSort(m)}>{m}{sortIndicator(m)}</th>)}
+            <th className="sortable" onClick={() => handleSort("date")}>Date{sortIndicator("date")}</th>
             <th>Note</th>
           </tr>
         </thead>
         <tbody>
-          {filtered.map((run) => (
+          {sorted.map((run) => (
             <tr key={run.id}>
               <td>
                 <input

@@ -143,6 +143,15 @@ td {
   color: var(--color-text);
 }
 
+th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+th.sortable:hover {
+  color: var(--color-accent);
+}
+
 /* ===== Metric Helpers ===== */
 
 .metric-value {
