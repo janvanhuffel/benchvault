@@ -189,3 +189,38 @@ def test_restore_active_run_returns_404(seeded_client):
     id1 = _submit_run(seeded_client, "m1")
     response = seeded_client.post("/api/runs/restore", json={"run_ids": [id1]})
     assert response.status_code == 404
+
+
+def test_full_delete_restore_cycle(seeded_client):
+    """End-to-end: create runs, delete some, verify trash, restore, verify active."""
+    id1 = _submit_run(seeded_client, "m1", epoch=1)
+    id2 = _submit_run(seeded_client, "m2", epoch=2)
+    id3 = _submit_run(seeded_client, "m3", epoch=3)
+
+    # Delete two runs
+    resp = seeded_client.request("DELETE", "/api/runs", json={"run_ids": [id1, id2]})
+    assert resp.json()["deleted"] == 2
+
+    # Active listing should have 1 run
+    active = seeded_client.get("/api/projects/test-project/runs").json()
+    assert len(active) == 1
+    assert active[0]["id"] == id3
+
+    # Trash should have 2 runs
+    trash = seeded_client.get("/api/projects/test-project/trash").json()
+    assert len(trash) == 2
+
+    # Restore one
+    resp = seeded_client.post("/api/runs/restore", json={"run_ids": [id1]})
+    assert resp.json()["restored"] == 1
+
+    # Active listing should have 2 runs
+    active = seeded_client.get("/api/projects/test-project/runs").json()
+    assert len(active) == 2
+    active_ids = {r["id"] for r in active}
+    assert active_ids == {id1, id3}
+
+    # Trash should have 1 run
+    trash = seeded_client.get("/api/projects/test-project/trash").json()
+    assert len(trash) == 1
+    assert trash[0]["id"] == id2
