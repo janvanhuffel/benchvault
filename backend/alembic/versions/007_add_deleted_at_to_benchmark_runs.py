@@ -19,7 +19,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column('benchmark_runs', sa.Column('deleted_at', sa.DateTime(), nullable=True))
+    op.add_column('benchmark_runs', sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True))
     op.create_index(
         'ix_benchmark_runs_deleted_at',
         'benchmark_runs',
