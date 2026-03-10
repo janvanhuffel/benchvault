@@ -54,7 +54,7 @@ export default function ProjectDetail() {
     navigate(`/compare?run_ids=${[...selected].join(",")}`);
   };
 
-  if (loading) return <p>Loading runs...</p>;
+  if (loading) return <p className="empty-state">Loading runs...</p>;
 
   return (
     <div>
@@ -113,7 +113,7 @@ export default function ProjectDetail() {
               <td>{run.dataset}</td>
               <td>{run.dataset_version}</td>
               <td>{run.epoch ?? "\u2014"}</td>
-              {metricNames.map((m) => <td key={m}>{getMetric(run, m)}</td>)}
+              {metricNames.map((m) => <td key={m} className="metric-value">{getMetric(run, m)}</td>)}
               <td>{new Date(run.created_at).toLocaleDateString()}</td>
               <td>{run.note || "\u2014"}</td>
             </tr>
@@ -121,7 +121,7 @@ export default function ProjectDetail() {
         </tbody>
       </table>
 
-      {filtered.length === 0 && <p style={{ marginTop: "1rem" }}>No runs match the current filters.</p>}
+      {filtered.length === 0 && <p className="empty-state">No runs match the current filters.</p>}
     </div>
   );
 }

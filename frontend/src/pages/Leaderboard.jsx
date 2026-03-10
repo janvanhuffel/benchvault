@@ -153,7 +153,7 @@ export default function Leaderboard() {
         </select>
       </div>
 
-      {loading && <p>Loading...</p>}
+      {loading && <p className="empty-state">Loading...</p>}
 
       {!loading && selectedProject && selectedMetric && (
         ranked.length > 0 ? (
@@ -171,22 +171,22 @@ export default function Leaderboard() {
             <tbody>
               {ranked.map((entry, i) => (
                 <tr key={`${entry.modelName}-${entry.modelVersion}`}>
-                  <td>{i + 1}</td>
+                  <td><span className="rank-number">{i + 1}</span></td>
                   <td>{entry.modelName}</td>
                   <td>{entry.modelVersion}</td>
-                  <td>{entry.value.toFixed(4)}</td>
+                  <td className="metric-value">{entry.value.toFixed(4)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         ) : (
-          <p>No runs found with the selected metric.</p>
+          <p className="empty-state">No runs found with the selected metric.</p>
         )
       )}
 
-      {!selectedProject && <p>Select a project to see the leaderboard.</p>}
+      {!selectedProject && <p className="empty-state">Select a project to see the leaderboard.</p>}
       {selectedProject && !selectedMetric && !loading && (
-        <p>Select a metric to rank by.</p>
+        <p className="empty-state">Select a metric to rank by.</p>
       )}
     </div>
   );

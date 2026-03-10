@@ -23,9 +23,9 @@ export default function Compare() {
   }, [idsParam, fetchComparison]);
 
   if (!idsParam)
-    return <p>No runs selected for comparison. Go back and select runs.</p>;
-  if (!fetchDone) return <p>Loading comparison...</p>;
-  if (error) return <p>{error}</p>;
+    return <p className="empty-state">No runs selected for comparison. Go back and select runs.</p>;
+  if (!fetchDone) return <p className="empty-state">Loading comparison...</p>;
+  if (error) return <p className="empty-state">{error}</p>;
   if (!data) return null;
 
   // For each metric, find the best value across runs
@@ -58,9 +58,9 @@ export default function Compare() {
               <th key={run.id}>
                 {run.model_name} / {run.model_version}
                 <br />
-                <small style={{ fontWeight: "normal", color: "#666" }}>
+                <span className="text-secondary" style={{ fontWeight: "normal" }}>
                   {run.dataset} {run.dataset_version}
-                </small>
+                </span>
               </th>
             ))}
           </tr>
@@ -72,9 +72,9 @@ export default function Compare() {
               <tr key={metricName}>
                 <td style={{ fontWeight: 500 }}>
                   {metricName}
-                  <small style={{ color: "#888", marginLeft: "0.5rem" }}>
+                  <span className="text-muted" style={{ marginLeft: "0.5rem" }}>
                     ({data.higher_is_better[metricName] ? "\u2191" : "\u2193"})
-                  </small>
+                  </span>
                 </td>
                 {data.runs.map((run) => {
                   const val = getMetricValue(run, metricName);
@@ -82,10 +82,7 @@ export default function Compare() {
                   return (
                     <td
                       key={run.id}
-                      style={{
-                        background: isBest ? "#d4edda" : "transparent",
-                        fontWeight: isBest ? 600 : 400,
-                      }}
+                      className={`metric-value${isBest ? " metric-best" : ""}`}
                     >
                       {val !== null ? val.toFixed(4) : "\u2014"}
                     </td>
