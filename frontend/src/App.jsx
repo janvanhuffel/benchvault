@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Link, useLocation } from "react-router-do
 import ProjectList from "./pages/ProjectList";
 import ProjectDetail from "./pages/ProjectDetail";
 import Compare from "./pages/Compare";
+import DatasetList from "./pages/DatasetList";
 import useTheme from "./hooks/useTheme";
 import "./App.css";
 
@@ -24,6 +25,12 @@ function Nav() {
         >
           Projects
         </Link>
+        <Link
+          to="/datasets"
+          className={`nav-link${isActive(["/datasets"]) ? " active" : ""}`}
+        >
+          Datasets
+        </Link>
       </div>
       <button className="theme-toggle" onClick={toggle} aria-label="Toggle theme">
         {theme === "dark" ? "\u2600" : "\u263E"}
@@ -41,6 +48,7 @@ function App() {
           <Route path="/" element={<ProjectList />} />
           <Route path="/projects/:name" element={<ProjectDetail />} />
           <Route path="/compare" element={<Compare />} />
+          <Route path="/datasets" element={<DatasetList />} />
         </Routes>
       </main>
     </BrowserRouter>
