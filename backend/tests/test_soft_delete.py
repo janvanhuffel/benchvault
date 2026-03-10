@@ -78,3 +78,36 @@ def test_cleanup_runs_when_no_previous_cleanup(seeded_db):
     tc._last_cleanup = None
     tc.maybe_cleanup_trash(seeded_db)
     assert tc._last_cleanup is not None
+
+
+def _submit_run(client, model_name="m1", epoch=1):
+    """Helper to submit a run and return its ID."""
+    r = client.post("/api/runs", json={
+        "project": "test-project",
+        "model_name": model_name, "model_version": "v1",
+        "dataset": "test-dataset", "dataset_version": "v1.0",
+        "epoch": epoch,
+        "metrics": {"accuracy": 0.9},
+    })
+    assert r.status_code == 201
+    return r.json()["id"]
+
+
+def test_delete_runs_soft_deletes(seeded_client):
+    """DELETE /api/runs should set deleted_at, not physically remove."""
+    id1 = _submit_run(seeded_client, "m1")
+    _submit_run(seeded_client, "m2")
+
+    response = seeded_client.request("DELETE", "/api/runs", json={"run_ids": [id1]})
+    assert response.status_code == 200
+    assert response.json()["deleted"] == 1
+
+
+def test_delete_runs_empty_list_returns_422(seeded_client):
+    response = seeded_client.request("DELETE", "/api/runs", json={"run_ids": []})
+    assert response.status_code == 422
+
+
+def test_delete_runs_nonexistent_returns_404(seeded_client):
+    response = seeded_client.request("DELETE", "/api/runs", json={"run_ids": [9999]})
+    assert response.status_code == 404

@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -6,9 +8,34 @@ from app.models import (
     Project, Dataset, DatasetVersion, Metric,
     ModelVersion, BenchmarkRun, RunMetric,
 )
-from app.schemas import RunSubmission, RunCreatedResponse
+from app.schemas import RunSubmission, RunCreatedResponse, RunIdsRequest
 
 router = APIRouter(prefix="/api")
+
+
+@router.delete("/runs")
+def delete_runs(body: RunIdsRequest, db: Session = Depends(get_db)):
+    if not body.run_ids:
+        raise HTTPException(422, detail="run_ids must not be empty")
+
+    runs = (
+        db.query(BenchmarkRun)
+        .filter(
+            BenchmarkRun.id.in_(body.run_ids),
+            BenchmarkRun.deleted_at.is_(None),
+        )
+        .all()
+    )
+
+    if not runs:
+        raise HTTPException(404, detail="No active runs found for the given IDs")
+
+    now = datetime.now(timezone.utc)
+    for run in runs:
+        run.deleted_at = now
+    db.commit()
+
+    return {"deleted": len(runs)}
 
 
 @router.post("/runs", response_model=RunCreatedResponse, status_code=201)

@@ -20,6 +20,10 @@ class RunCreatedResponse(BaseModel):
     created_at: datetime
 
 
+class RunIdsRequest(BaseModel):
+    run_ids: list[int]
+
+
 # --- Read responses ---
 
 class ProjectResponse(BaseModel):
