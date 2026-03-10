@@ -96,11 +96,17 @@ def _submit_run(client, model_name="m1", epoch=1):
 def test_delete_runs_soft_deletes(seeded_client):
     """DELETE /api/runs should set deleted_at, not physically remove."""
     id1 = _submit_run(seeded_client, "m1")
-    _submit_run(seeded_client, "m2")
+    id2 = _submit_run(seeded_client, "m2")
 
     response = seeded_client.request("DELETE", "/api/runs", json={"run_ids": [id1]})
     assert response.status_code == 200
     assert response.json()["deleted"] == 1
+
+    # Deleted run should not appear in normal listing
+    runs = seeded_client.get("/api/projects/test-project/runs").json()
+    run_ids = [r["id"] for r in runs]
+    assert id1 not in run_ids
+    assert id2 in run_ids
 
 
 def test_delete_runs_empty_list_returns_422(seeded_client):

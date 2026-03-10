@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getProjectTrash, restoreRuns } from "../api";
 
@@ -8,11 +8,11 @@ export default function ProjectTrash() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(new Set());
 
-  const refresh = () => getProjectTrash(name).then(setRuns);
+  const refresh = useCallback(() => getProjectTrash(name).then(setRuns), [name]);
 
   useEffect(() => {
     refresh().finally(() => setLoading(false));
-  }, [name]);
+  }, [refresh]);
 
   const toggle = (id) => {
     const next = new Set(selected);

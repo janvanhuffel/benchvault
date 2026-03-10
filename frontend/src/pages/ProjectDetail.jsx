@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { getProjectRuns, deleteRuns } from "../api";
 
@@ -17,11 +17,11 @@ export default function ProjectDetail() {
   const [sortBy, setSortBy] = useState(null);
   const [sortDir, setSortDir] = useState("desc");
 
-  const refresh = () => getProjectRuns(name).then(setRuns);
+  const refresh = useCallback(() => getProjectRuns(name).then(setRuns), [name]);
 
   useEffect(() => {
     refresh().finally(() => setLoading(false));
-  }, [name]);
+  }, [refresh]);
 
   // Client-side filtering
   const filtered = runs.filter((r) => {
