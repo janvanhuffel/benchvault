@@ -1,11 +1,40 @@
+import json
+
 from sqlalchemy import (
     Column, Integer, String, Float, Boolean, Text,
     DateTime, ForeignKey, UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+from sqlalchemy.types import TypeDecorator
 
 from app.database import Base
+
+
+class StringArray(TypeDecorator):
+    """Stores a list of strings. Uses ARRAY on PostgreSQL, JSON text on SQLite."""
+    impl = Text
+    cache_ok = True
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == "postgresql":
+            from sqlalchemy.dialects.postgresql import ARRAY
+            return dialect.type_descriptor(ARRAY(String))
+        return dialect.type_descriptor(Text)
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
+        if dialect.name == "postgresql":
+            return value  # ARRAY handles it
+        return json.dumps(value)
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return None
+        if dialect.name == "postgresql":
+            return value  # already a list
+        return json.loads(value)
 
 
 class Project(Base):
@@ -22,6 +51,10 @@ class Dataset(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True, nullable=False)
+    modality = Column(String, nullable=True)
+    task = Column(String, nullable=True)
+    license = Column(String, nullable=True)
+    source_url = Column(String, nullable=True)
 
     versions = relationship("DatasetVersion", back_populates="dataset")
 
@@ -33,6 +66,16 @@ class DatasetVersion(Base):
     dataset_id = Column(Integer, ForeignKey("datasets.id"), nullable=False)
     version = Column(String, nullable=False)
     description = Column(Text, nullable=True)
+    num_classes = Column(Integer, nullable=True)
+    class_names = Column(StringArray, nullable=True)
+    train_count = Column(Integer, nullable=True)
+    val_count = Column(Integer, nullable=True)
+    test_count = Column(Integer, nullable=True)
+    total_samples = Column(Integer, nullable=True)
+    total_size_gb = Column(Float, nullable=True)
+    collection_method = Column(String, nullable=True)
+    sensor = Column(String, nullable=True)
+    file_type = Column(String, nullable=True)
 
     dataset = relationship("Dataset", back_populates="versions")
     runs = relationship("BenchmarkRun", back_populates="dataset_version")
