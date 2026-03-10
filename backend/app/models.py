@@ -76,6 +76,7 @@ class DatasetVersion(Base):
     collection_method = Column(String, nullable=True)
     sensor = Column(String, nullable=True)
     file_type = Column(String, nullable=True)
+    storage_url = Column(String, nullable=True)
 
     dataset = relationship("Dataset", back_populates="versions")
     runs = relationship("BenchmarkRun", back_populates="dataset_version")

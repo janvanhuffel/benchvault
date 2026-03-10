@@ -6,6 +6,19 @@ async function fetchJson(path) {
   return response.json();
 }
 
+async function postJson(path, body) {
+  const response = await fetch(`${API_URL}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail || `API error: ${response.status}`);
+  }
+  return response.json();
+}
+
 export function getProjects() {
   return fetchJson("/api/projects");
 }
@@ -24,4 +37,12 @@ export function getMetrics() {
 
 export function compareRuns(runIds) {
   return fetchJson(`/api/compare?run_ids=${runIds.join(",")}`);
+}
+
+export function createDataset(body) {
+  return postJson("/api/datasets", body);
+}
+
+export function createDatasetVersion(datasetName, body) {
+  return postJson(`/api/datasets/${encodeURIComponent(datasetName)}/versions`, body);
 }

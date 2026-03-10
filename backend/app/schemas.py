@@ -57,6 +57,7 @@ class DatasetVersionCreateRequest(BaseModel):
     collection_method: str | None = None
     sensor: str | None = None
     file_type: str | None = None
+    storage_url: str | None = None
 
 
 class DatasetVersionDetailResponse(BaseModel):
@@ -73,6 +74,7 @@ class DatasetVersionDetailResponse(BaseModel):
     collection_method: str | None
     sensor: str | None
     file_type: str | None
+    storage_url: str | None
 
     model_config = {"from_attributes": True}
 
