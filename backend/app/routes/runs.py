@@ -38,6 +38,30 @@ def delete_runs(body: RunIdsRequest, db: Session = Depends(get_db)):
     return {"deleted": len(runs)}
 
 
+@router.post("/runs/restore")
+def restore_runs(body: RunIdsRequest, db: Session = Depends(get_db)):
+    if not body.run_ids:
+        raise HTTPException(422, detail="run_ids must not be empty")
+
+    runs = (
+        db.query(BenchmarkRun)
+        .filter(
+            BenchmarkRun.id.in_(body.run_ids),
+            BenchmarkRun.deleted_at.isnot(None),
+        )
+        .all()
+    )
+
+    if not runs:
+        raise HTTPException(404, detail="No trashed runs found for the given IDs")
+
+    for run in runs:
+        run.deleted_at = None
+    db.commit()
+
+    return {"restored": len(runs)}
+
+
 @router.post("/runs", response_model=RunCreatedResponse, status_code=201)
 def submit_run(submission: RunSubmission, db: Session = Depends(get_db)):
     # Validate project

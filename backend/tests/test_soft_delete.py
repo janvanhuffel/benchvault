@@ -158,3 +158,34 @@ def test_trash_listing_empty_when_no_deleted_runs(seeded_client):
 def test_trash_listing_nonexistent_project_returns_404(seeded_client):
     response = seeded_client.get("/api/projects/nonexistent/trash")
     assert response.status_code == 404
+
+
+def test_restore_runs(seeded_client):
+    id1 = _submit_run(seeded_client, "m1")
+
+    seeded_client.request("DELETE", "/api/runs", json={"run_ids": [id1]})
+
+    trash = seeded_client.get("/api/projects/test-project/trash").json()
+    assert len(trash) == 1
+
+    response = seeded_client.post("/api/runs/restore", json={"run_ids": [id1]})
+    assert response.status_code == 200
+    assert response.json()["restored"] == 1
+
+    runs = seeded_client.get("/api/projects/test-project/runs").json()
+    assert any(r["id"] == id1 for r in runs)
+
+    trash = seeded_client.get("/api/projects/test-project/trash").json()
+    assert len(trash) == 0
+
+
+def test_restore_nonexistent_returns_404(seeded_client):
+    response = seeded_client.post("/api/runs/restore", json={"run_ids": [9999]})
+    assert response.status_code == 404
+
+
+def test_restore_active_run_returns_404(seeded_client):
+    """Restoring a non-deleted run should fail."""
+    id1 = _submit_run(seeded_client, "m1")
+    response = seeded_client.post("/api/runs/restore", json={"run_ids": [id1]})
+    assert response.status_code == 404
