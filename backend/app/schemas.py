@@ -10,7 +10,7 @@ class RunSubmission(BaseModel):
     model_version: str
     dataset: str
     dataset_version: str
-    epoch: int | None = None
+    epoch: int
     note: str | None = None
     metrics: dict[str, float]
 
@@ -64,7 +64,7 @@ class RunResponse(BaseModel):
     model_version: str
     dataset: str
     dataset_version: str
-    epoch: int | None
+    epoch: int
     note: str | None
     created_at: datetime
     metrics: list[MetricValueResponse]

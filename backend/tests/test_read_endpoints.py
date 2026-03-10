@@ -25,6 +25,7 @@ def test_list_runs_for_project(seeded_client):
         "project": "test-project",
         "model_name": "m", "model_version": "v1",
         "dataset": "test-dataset", "dataset_version": "v1.0",
+        "epoch": 1,
         "metrics": {"accuracy": 0.9},
     })
     response = seeded_client.get("/api/projects/test-project/runs")

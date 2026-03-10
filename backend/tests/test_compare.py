@@ -4,12 +4,14 @@ def test_compare_runs(seeded_client):
         "project": "test-project",
         "model_name": "m1", "model_version": "v1",
         "dataset": "test-dataset", "dataset_version": "v1.0",
+        "epoch": 1,
         "metrics": {"accuracy": 0.9, "f1_score": 0.85},
     })
     r2 = seeded_client.post("/api/runs", json={
         "project": "test-project",
         "model_name": "m2", "model_version": "v1",
         "dataset": "test-dataset", "dataset_version": "v1.0",
+        "epoch": 1,
         "metrics": {"accuracy": 0.95, "f1_score": 0.88},
     })
 
@@ -46,12 +48,14 @@ def test_compare_preserves_requested_run_order(seeded_client):
         "project": "test-project",
         "model_name": "m1", "model_version": "v1",
         "dataset": "test-dataset", "dataset_version": "v1.0",
+        "epoch": 1,
         "metrics": {"accuracy": 0.9},
     })
     r2 = seeded_client.post("/api/runs", json={
         "project": "test-project",
         "model_name": "m2", "model_version": "v1",
         "dataset": "test-dataset", "dataset_version": "v1.0",
+        "epoch": 1,
         "metrics": {"accuracy": 0.95},
     })
 

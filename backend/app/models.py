@@ -32,6 +32,7 @@ class DatasetVersion(Base):
     id = Column(Integer, primary_key=True)
     dataset_id = Column(Integer, ForeignKey("datasets.id"), nullable=False)
     version = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
 
     dataset = relationship("Dataset", back_populates="versions")
     runs = relationship("BenchmarkRun", back_populates="dataset_version")
@@ -58,6 +59,7 @@ class ModelVersion(Base):
     id = Column(Integer, primary_key=True)
     model_name = Column(String, nullable=False)
     model_version = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
 
     runs = relationship("BenchmarkRun", back_populates="model_version")
 
@@ -73,7 +75,7 @@ class BenchmarkRun(Base):
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False)
     model_version_id = Column(Integer, ForeignKey("model_versions.id"), nullable=False)
     dataset_version_id = Column(Integer, ForeignKey("dataset_versions.id"), nullable=False)
-    epoch = Column(Integer, nullable=True)
+    epoch = Column(Integer, nullable=False)
     note = Column(Text, nullable=True)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
 
