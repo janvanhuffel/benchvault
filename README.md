@@ -35,7 +35,7 @@ Three services orchestrated with Docker Compose:
 
 ```bash
 docker compose up --build
-docker compose exec backend alembic upgrade head   # run migrations + seed data
+docker compose exec backend uv run alembic upgrade head   # run migrations + seed data
 ```
 
 - Frontend: http://localhost:3000
