@@ -122,7 +122,7 @@ class BenchmarkRun(Base):
     epoch = Column(Integer, nullable=False)
     note = Column(Text, nullable=True)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
-    deleted_at = Column(DateTime(timezone=True), nullable=True, default=None)
+    deleted_at = Column(DateTime(timezone=True), nullable=True, default=None, index=True)
 
     project = relationship("Project", back_populates="runs")
     model_version = relationship("ModelVersion", back_populates="runs")

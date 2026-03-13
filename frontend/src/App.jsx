@@ -4,6 +4,7 @@ import ProjectDetail from "./pages/ProjectDetail";
 import Compare from "./pages/Compare";
 import DatasetList from "./pages/DatasetList";
 import ProjectTrash from "./pages/ProjectTrash";
+import SchemaERD from "./pages/SchemaERD";
 import useTheme from "./hooks/useTheme";
 import "./App.css";
 
@@ -32,6 +33,12 @@ function Nav() {
         >
           Datasets
         </Link>
+        <Link
+          to="/schema"
+          className={`nav-link${isActive(["/schema"]) ? " active" : ""}`}
+        >
+          Schema
+        </Link>
       </div>
       <button className="theme-toggle" onClick={toggle} aria-label="Toggle theme">
         {theme === "dark" ? "\u2600" : "\u263E"}
@@ -51,6 +58,7 @@ function App() {
           <Route path="/projects/:name/trash" element={<ProjectTrash />} />
           <Route path="/compare" element={<Compare />} />
           <Route path="/datasets" element={<DatasetList />} />
+          <Route path="/schema" element={<SchemaERD />} />
         </Routes>
       </main>
     </BrowserRouter>

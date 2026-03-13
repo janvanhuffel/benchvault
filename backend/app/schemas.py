@@ -133,3 +133,40 @@ class CompareResponse(BaseModel):
     metric_names: list[str]
     higher_is_better: dict[str, bool]
     runs: list[RunResponse]
+
+
+# --- Schema introspection ---
+
+class ColumnSchema(BaseModel):
+    name: str
+    type: str
+    primary_key: bool
+    nullable: bool
+    unique: bool
+
+
+class ForeignKeySchema(BaseModel):
+    column: str
+    references_table: str
+    references_column: str
+
+
+class UniqueConstraintSchema(BaseModel):
+    name: str | None
+    columns: list[str]
+
+
+class TableSchema(BaseModel):
+    name: str
+    columns: list[ColumnSchema]
+    foreign_keys: list[ForeignKeySchema]
+    unique_constraints: list[UniqueConstraintSchema]
+
+
+class SchemaResponse(BaseModel):
+    tables: list[TableSchema]
+
+
+class SyncResponse(BaseModel):
+    in_sync: bool
+    differences: list[str]
