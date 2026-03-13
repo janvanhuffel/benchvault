@@ -56,7 +56,7 @@ function buildLayout(tables) {
         id: `${table.name}.${fk.column}->${fk.references_table}.${fk.references_column}`,
         source: table.name,
         target: fk.references_table,
-        label: `${fk.column}`,
+        label: `${fk.column} → ${fk.references_table}.${fk.references_column}`,
         type: "smoothstep",
         animated: true,
       });
@@ -70,6 +70,7 @@ export default function SchemaERD() {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [syncStatus, setSyncStatus] = useState(null);
   const [syncExpanded, setSyncExpanded] = useState(false);
 
@@ -80,6 +81,7 @@ export default function SchemaERD() {
         setNodes(n);
         setEdges(e);
       })
+      .catch(() => setError("Failed to load schema"))
       .finally(() => setLoading(false));
 
     getSchemaSync()
@@ -90,6 +92,7 @@ export default function SchemaERD() {
   const toggleSync = useCallback(() => setSyncExpanded((v) => !v), []);
 
   if (loading) return <p className="empty-state">Loading schema...</p>;
+  if (error) return <p className="empty-state">{error}</p>;
 
   return (
     <div className="erd-container">
@@ -100,16 +103,16 @@ export default function SchemaERD() {
         ) : syncStatus.in_sync ? (
           <span className="sync-badge sync-ok">In Sync</span>
         ) : (
-          <span className="sync-badge sync-error" onClick={toggleSync}>
+          <button className="sync-badge sync-error" onClick={toggleSync}>
             Out of Sync ({syncStatus.differences.length})
-          </span>
+          </button>
         )}
       </div>
       {syncStatus && !syncStatus.in_sync && syncExpanded && (
         <div className="sync-details">
           <ul>
-            {syncStatus.differences.map((d, i) => (
-              <li key={i}>{d}</li>
+            {syncStatus.differences.map((d) => (
+              <li key={d}>{d}</li>
             ))}
           </ul>
         </div>

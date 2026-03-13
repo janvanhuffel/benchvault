@@ -580,6 +580,9 @@ select:focus {
   background: #fee2e2;
   color: #991b1b;
   cursor: pointer;
+  border: none;
+  font-family: inherit;
+  line-height: inherit;
 }
 
 [data-theme="dark"] .sync-error {
