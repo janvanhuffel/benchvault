@@ -51,34 +51,34 @@ class DatasetUpdateRequest(BaseModel):
 class DatasetVersionCreateRequest(BaseModel):
     version: str
     description: str | None = None
-    num_classes: int | None = None
+    num_classes: int
     class_names: list[str] | None = None
-    train_count: int | None = None
-    val_count: int | None = None
-    test_count: int | None = None
-    total_samples: int | None = None
-    total_size_gb: float | None = None
+    train_count: int
+    val_count: int
+    test_count: int
+    total_samples: int
+    total_size_gb: float
     collection_method: str | None = None
     sensor: str | None = None
-    file_type: str | None = None
-    storage_url: str | None = None
+    file_type: str
+    storage_url: str
 
 
 class DatasetVersionDetailResponse(BaseModel):
     id: int
     version: str
     description: str | None
-    num_classes: int | None
+    num_classes: int
     class_names: list[str] | None
-    train_count: int | None
-    val_count: int | None
-    test_count: int | None
-    total_samples: int | None
-    total_size_gb: float | None
+    train_count: int
+    val_count: int
+    test_count: int
+    total_samples: int
+    total_size_gb: float
     collection_method: str | None
     sensor: str | None
-    file_type: str | None
-    storage_url: str | None
+    file_type: str
+    storage_url: str
 
     model_config = {"from_attributes": True}
 
