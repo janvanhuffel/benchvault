@@ -179,7 +179,7 @@ export default function ExperimentDetail() {
           </label>
           {showDeleteConfirm ? (
             <span className="delete-confirm">
-              Delete?{" "}
+              Delete? It can be restored from trash within 7 days.{" "}
               <button className="btn-text btn-text-danger" onClick={handleDelete}>Yes</button>
               {" / "}
               <button className="btn-text" onClick={() => setShowDeleteConfirm(false)}>No</button>

@@ -6,6 +6,7 @@ import DatasetList from "./pages/DatasetList";
 import ProjectTrash from "./pages/ProjectTrash";
 import ExperimentList from "./pages/ExperimentList";
 import ExperimentDetail from "./pages/ExperimentDetail";
+import ExperimentTrash from "./pages/ExperimentTrash";
 import SchemaERD from "./pages/SchemaERD";
 import useTheme from "./hooks/useTheme";
 import "./App.css";
@@ -67,6 +68,7 @@ function App() {
           <Route path="/compare" element={<Compare />} />
           <Route path="/datasets" element={<DatasetList />} />
           <Route path="/experiments" element={<ExperimentList />} />
+          <Route path="/experiments/trash" element={<ExperimentTrash />} />
           <Route path="/experiments/:id" element={<ExperimentDetail />} />
           <Route path="/schema" element={<SchemaERD />} />
         </Routes>

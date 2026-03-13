@@ -104,7 +104,16 @@ export function deleteExperiment(id) {
     method: "DELETE",
   }).then((r) => {
     if (!r.ok) throw new Error(`DELETE /api/experiments/${id} failed: ${r.status}`);
+    return r.json();
   });
+}
+
+export function getExperimentTrash() {
+  return fetchJson("/api/experiments/trash");
+}
+
+export function restoreExperiments(experimentIds) {
+  return postJson("/api/experiments/restore", { experiment_ids: experimentIds });
 }
 
 export function addRunsToExperiment(experimentId, runIds) {

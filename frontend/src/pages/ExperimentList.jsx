@@ -55,7 +55,10 @@ export default function ExperimentList() {
     <div className="page">
       <div className="page-header">
         <h2>Experiments</h2>
-        <button className="btn btn-primary" onClick={openForm}>+ New Experiment</button>
+        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+          <Link to="/experiments/trash" className="trash-link">Trash</Link>
+          <button className="btn btn-primary" onClick={openForm}>+ New Experiment</button>
+        </div>
       </div>
 
       {showForm && (
@@ -125,6 +128,7 @@ export default function ExperimentList() {
           </div>
         </section>
       )}
+
     </div>
   );
 }
