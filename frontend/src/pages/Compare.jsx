@@ -96,7 +96,7 @@ export default function Compare() {
             <th>Metric</th>
             {data.runs.map((run) => (
               <th key={run.id} className="metric-value">
-                {run.model_name} / {run.model_version}
+                {run.model_name} / {run.model_version} (ep {run.epoch})
                 <br />
                 <span className="text-secondary" style={{ fontWeight: "normal" }}>
                   {run.dataset} {run.dataset_version}
@@ -186,7 +186,7 @@ export default function Compare() {
                         key={`${group.metric_name}-${run.id}`}
                         className={gi > 0 && ri === 0 ? "pcm-group-sep" : ""}
                       >
-                        {run.model_name} / {run.model_version}
+                        {run.model_name} / {run.model_version} (ep {run.epoch})
                       </th>
                     ))
                   )}
