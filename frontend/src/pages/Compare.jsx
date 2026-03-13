@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { compareRuns } from "../api";
 
@@ -7,7 +7,7 @@ function getHslColor(value) {
   const v = Math.max(0, Math.min(1, value));
   // red(0) → yellow(60) → green(120)
   const hue = v * 120;
-  return `hsla(${hue}, 70%, 45%, 0.35)`;
+  return `hsla(${hue}, 70%, 45%, 0.45)`;
 }
 
 export default function Compare() {
@@ -16,6 +16,7 @@ export default function Compare() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [fetchDone, setFetchDone] = useState(false);
+  const [metricOrder, setMetricOrder] = useState(null);
 
   const fetchComparison = useCallback((ids) => {
     compareRuns(ids)
@@ -29,6 +30,31 @@ export default function Compare() {
     const ids = idsParam.split(",").map(Number);
     fetchComparison(ids);
   }, [idsParam, fetchComparison]);
+
+  const perClass = useMemo(() => data?.per_class_metrics || [], [data]);
+
+  const initialOrder = useMemo(
+    () => perClass.map((g) => g.metric_name),
+    [perClass]
+  );
+
+  const order = metricOrder ?? initialOrder;
+
+  const orderedPerClass = useMemo(
+    () => order.map((name) => perClass.find((g) => g.metric_name === name)).filter(Boolean),
+    [order, perClass]
+  );
+
+  const moveGroup = useCallback(
+    (index, direction) => {
+      const newOrder = [...order];
+      const swapIndex = index + direction;
+      if (swapIndex < 0 || swapIndex >= newOrder.length) return;
+      [newOrder[index], newOrder[swapIndex]] = [newOrder[swapIndex], newOrder[index]];
+      setMetricOrder(newOrder);
+    },
+    [order]
+  );
 
   if (!idsParam)
     return <p className="empty-state">No runs selected for comparison. Go back and select runs.</p>;
@@ -55,7 +81,6 @@ export default function Compare() {
     return metric ? metric.value : null;
   };
 
-  const perClass = data.per_class_metrics || [];
   // Check if runs have different dataset versions (for info message)
   const datasetVersions = new Set(data.runs.map((r) => `${r.dataset}/${r.dataset_version}`));
   const hasMixedVersions = datasetVersions.size > 1;
@@ -124,18 +149,38 @@ export default function Compare() {
               <thead>
                 <tr>
                   <th rowSpan={2} style={{ textAlign: "left" }}>Class</th>
-                  {perClass.map((group, gi) => (
+                  {orderedPerClass.map((group, gi) => (
                     <th
                       key={group.metric_name}
                       colSpan={data.runs.length}
                       className={`pcm-group-header${gi > 0 ? " pcm-group-sep" : ""}`}
                     >
                       {group.metric_name} ({group.higher_is_better ? "\u2191" : "\u2193"})
+                      <span className="pcm-reorder-btns">
+                        <button
+                          className="pcm-reorder-btn"
+                          onClick={() => moveGroup(gi, -1)}
+                          disabled={gi === 0}
+                          aria-label={`Move ${group.metric_name} left`}
+                          title="Move left"
+                        >
+                          &#8592;
+                        </button>
+                        <button
+                          className="pcm-reorder-btn"
+                          onClick={() => moveGroup(gi, 1)}
+                          disabled={gi === orderedPerClass.length - 1}
+                          aria-label={`Move ${group.metric_name} right`}
+                          title="Move right"
+                        >
+                          &#8594;
+                        </button>
+                      </span>
                     </th>
                   ))}
                 </tr>
                 <tr>
-                  {perClass.map((group, gi) =>
+                  {orderedPerClass.map((group, gi) =>
                     data.runs.map((run, ri) => (
                       <th
                         key={`${group.metric_name}-${run.id}`}
@@ -148,10 +193,10 @@ export default function Compare() {
                 </tr>
               </thead>
               <tbody>
-                {perClass[0].classes.map((className) => (
+                {orderedPerClass[0].classes.map((className) => (
                   <tr key={className}>
                     <td className="pcm-class-name">{className}</td>
-                    {perClass.map((group, gi) => {
+                    {orderedPerClass.map((group, gi) => {
                       // Find best value for this class across runs
                       const classValues = group.runs
                         .map((rv) => rv.values[className])
