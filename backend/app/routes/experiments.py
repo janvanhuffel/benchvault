@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func
 from sqlalchemy.orm import Session, contains_eager, joinedload
@@ -14,6 +16,7 @@ from app.routes.projects import _run_to_response
 from app.schemas import (
     ExperimentCreateRequest,
     ExperimentDetailResponse,
+    ExperimentIdsRequest,
     ExperimentSummaryResponse,
     ExperimentUpdateRequest,
     RunExperimentInfo,
@@ -24,7 +27,11 @@ router = APIRouter(prefix="/api")
 
 
 def _get_experiment_or_404(db: Session, experiment_id: int) -> Experiment:
-    experiment = db.query(Experiment).filter(Experiment.id == experiment_id).first()
+    experiment = (
+        db.query(Experiment)
+        .filter(Experiment.id == experiment_id, Experiment.deleted_at.is_(None))
+        .first()
+    )
     if not experiment:
         raise HTTPException(status_code=404, detail=f"Experiment {experiment_id} not found")
     return experiment
@@ -54,7 +61,8 @@ def list_experiments(
         .outerjoin(BenchmarkRun, (ExperimentRun.run_id == BenchmarkRun.id) & (BenchmarkRun.deleted_at.is_(None)))
         .join(Project, Experiment.project_id == Project.id)
         .options(contains_eager(Experiment.project))
-        .group_by(Experiment.id)
+        .filter(Experiment.deleted_at.is_(None))
+        .group_by(Experiment.id, Project.id)
     )
 
     if project_name:
@@ -103,6 +111,47 @@ def create_experiment(
     return _experiment_to_summary(experiment, 0)
 
 
+@router.get("/experiments/trash", response_model=list[ExperimentSummaryResponse])
+def list_trashed_experiments(
+    project_name: str | None = Query(None),
+    db: Session = Depends(get_db),
+):
+    query = (
+        db.query(Experiment, func.count(BenchmarkRun.id).label("run_count"))
+        .outerjoin(ExperimentRun, Experiment.id == ExperimentRun.experiment_id)
+        .outerjoin(BenchmarkRun, (ExperimentRun.run_id == BenchmarkRun.id) & (BenchmarkRun.deleted_at.is_(None)))
+        .join(Project, Experiment.project_id == Project.id)
+        .options(contains_eager(Experiment.project))
+        .filter(Experiment.deleted_at.isnot(None))
+        .group_by(Experiment.id, Project.id)
+        .order_by(Experiment.deleted_at.desc())
+    )
+    if project_name:
+        query = query.filter(Project.name == project_name)
+    results = query.all()
+    return [_experiment_to_summary(exp, count) for exp, count in results]
+
+
+@router.post("/experiments/restore")
+def restore_experiments(
+    req: ExperimentIdsRequest,
+    db: Session = Depends(get_db),
+):
+    if not req.experiment_ids:
+        raise HTTPException(status_code=422, detail="experiment_ids must not be empty")
+    experiments = (
+        db.query(Experiment)
+        .filter(Experiment.id.in_(req.experiment_ids), Experiment.deleted_at.isnot(None))
+        .all()
+    )
+    if not experiments:
+        raise HTTPException(status_code=404, detail="No trashed experiments found for the given IDs")
+    for exp in experiments:
+        exp.deleted_at = None
+    db.commit()
+    return {"restored": len(experiments)}
+
+
 @router.get("/experiments/{experiment_id}", response_model=ExperimentDetailResponse)
 def get_experiment(
     experiment_id: int,
@@ -111,7 +160,7 @@ def get_experiment(
     experiment = (
         db.query(Experiment)
         .options(joinedload(Experiment.project))
-        .filter(Experiment.id == experiment_id)
+        .filter(Experiment.id == experiment_id, Experiment.deleted_at.is_(None))
         .first()
     )
     if not experiment:
@@ -224,14 +273,15 @@ def update_experiment(
     return _experiment_to_summary(experiment, run_count)
 
 
-@router.delete("/experiments/{experiment_id}", status_code=204)
+@router.delete("/experiments/{experiment_id}")
 def delete_experiment(
     experiment_id: int,
     db: Session = Depends(get_db),
 ):
     experiment = _get_experiment_or_404(db, experiment_id)
-    db.delete(experiment)
+    experiment.deleted_at = datetime.now(timezone.utc)
     db.commit()
+    return {"deleted": 1}
 
 
 @router.post("/experiments/{experiment_id}/runs", status_code=204)

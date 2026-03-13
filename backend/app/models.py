@@ -180,6 +180,7 @@ class Experiment(Base):
     status = Column(String, nullable=False, server_default="active")
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
+    deleted_at = Column(DateTime(timezone=True), nullable=True, default=None, index=True)
 
     project = relationship("Project")
     experiment_runs = relationship("ExperimentRun", back_populates="experiment", cascade="all, delete-orphan")

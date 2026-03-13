@@ -194,6 +194,10 @@ class SyncResponse(BaseModel):
     differences: list[str]
 
 
+class ExperimentIdsRequest(BaseModel):
+    experiment_ids: list[int]
+
+
 class ExperimentCreateRequest(BaseModel):
     project_name: str
     name: str
