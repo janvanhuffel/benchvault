@@ -65,3 +65,11 @@ export function restoreRuns(runIds) {
 export function getProjectTrash(projectName) {
   return fetchJson(`/api/projects/${encodeURIComponent(projectName)}/trash`);
 }
+
+export function getSchema() {
+  return fetchJson("/api/schema");
+}
+
+export function getSchemaSync() {
+  return fetchJson("/api/schema/sync");
+}
