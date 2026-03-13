@@ -52,4 +52,4 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.drop_table("run_class_metrics")
     op.drop_column("metrics", "is_per_class")
-    # Note: seeded metric rows (iou, precision, recall) are not removed in downgrade
+    op.execute("DELETE FROM metrics WHERE name IN ('iou', 'precision', 'recall')")
