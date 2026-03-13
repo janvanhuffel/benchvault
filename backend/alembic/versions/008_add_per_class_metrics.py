@@ -35,21 +35,17 @@ def upgrade() -> None:
         sa.UniqueConstraint("run_id", "metric_id", "class_name", name="uq_run_class_metric"),
     )
 
-    # 3. Seed per-class metric types
-    metrics_table = sa.table(
-        "metrics",
-        sa.column("name", sa.String),
-        sa.column("higher_is_better", sa.Boolean),
-        sa.column("is_per_class", sa.Boolean),
-    )
-    op.bulk_insert(metrics_table, [
-        {"name": "iou", "higher_is_better": True, "is_per_class": True},
-        {"name": "precision", "higher_is_better": True, "is_per_class": True},
-        {"name": "recall", "higher_is_better": True, "is_per_class": True},
-    ])
+    # 3. Seed per-class metric types (upsert to handle pre-existing rows)
+    for name, higher_is_better in [("iou", True), ("precision", True), ("recall", True)]:
+        op.execute(
+            sa.text(
+                "INSERT INTO metrics (name, higher_is_better, is_per_class) "
+                "VALUES (:name, :hib, true) "
+                "ON CONFLICT (name) DO UPDATE SET is_per_class = true, higher_is_better = EXCLUDED.higher_is_better"
+            ).bindparams(name=name, hib=higher_is_better)
+        )
 
 
 def downgrade() -> None:
     op.drop_table("run_class_metrics")
     op.drop_column("metrics", "is_per_class")
-    op.execute("DELETE FROM metrics WHERE name IN ('iou', 'precision', 'recall')")
