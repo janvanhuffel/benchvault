@@ -2,10 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
-from app.models import Project, BenchmarkRun
+from app.models import Project, BenchmarkRun, Experiment, ExperimentRun
 from app.schemas import (
     ProjectResponse,
     RunResponse,
+    RunExperimentInfo,
     MetricValueResponse,
 )
 from app.trash_cleanup import maybe_cleanup_trash
@@ -13,7 +14,7 @@ from app.trash_cleanup import maybe_cleanup_trash
 router = APIRouter(prefix="/api")
 
 
-def _run_to_response(run: BenchmarkRun) -> RunResponse:
+def _run_to_response(run: BenchmarkRun, experiments: list | None = None) -> RunResponse:
     return RunResponse(
         id=run.id,
         project=run.project.name,
@@ -32,6 +33,7 @@ def _run_to_response(run: BenchmarkRun) -> RunResponse:
             )
             for rm in run.run_metrics
         ],
+        experiments=experiments or [],
     )
 
 
@@ -64,7 +66,24 @@ def list_runs_for_project(project_name: str, db: Session = Depends(get_db)):
         )
         .all()
     )
-    return [_run_to_response(r) for r in runs]
+
+    # Load experiment memberships for all runs in one query
+    run_ids = [r.id for r in runs]
+    if run_ids:
+        exp_memberships = (
+            db.query(ExperimentRun.run_id, Experiment.id, Experiment.name)
+            .join(Experiment, ExperimentRun.experiment_id == Experiment.id)
+            .filter(ExperimentRun.run_id.in_(run_ids))
+            .all()
+        )
+        # Group by run_id
+        exp_by_run: dict[int, list[RunExperimentInfo]] = {}
+        for rid, eid, ename in exp_memberships:
+            exp_by_run.setdefault(rid, []).append(RunExperimentInfo(id=eid, name=ename))
+    else:
+        exp_by_run = {}
+
+    return [_run_to_response(r, experiments=exp_by_run.get(r.id)) for r in runs]
 
 
 @router.get("/projects/{project_name}/trash", response_model=list[RunResponse])
