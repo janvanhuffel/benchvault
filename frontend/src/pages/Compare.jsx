@@ -85,10 +85,6 @@ export default function Compare() {
   const datasetVersions = new Set(data.runs.map((r) => `${r.dataset}/${r.dataset_version}`));
   const hasMixedVersions = datasetVersions.size > 1;
 
-  // Detect if all runs share the same model name and version (used to shorten per-class sub-headers)
-  const modelKeys = new Set(data.runs.map((r) => `${r.model_name}/${r.model_version}`));
-  const allSameModel = modelKeys.size === 1;
-
   return (
     <div>
       <h1>Run Comparison</h1>
@@ -190,9 +186,9 @@ export default function Compare() {
                         key={`${group.metric_name}-${run.id}`}
                         className={gi > 0 && ri === 0 ? "pcm-group-sep" : ""}
                       >
-                        {allSameModel
-                          ? `ep ${run.epoch}`
-                          : `${run.model_name} / ${run.model_version} (ep ${run.epoch})`}
+                        {run.model_name} / {run.model_version}
+                        <br />
+                        ep {run.epoch}
                       </th>
                     ))
                   )}
