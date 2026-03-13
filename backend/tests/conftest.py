@@ -83,3 +83,28 @@ def seeded_client(seeded_db):
     app.dependency_overrides[get_db] = override_get_db
     yield TestClient(app)
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def experiment_client(seeded_db):
+    """seeded_db + one experiment for test-project."""
+    from app.models import Experiment, Project
+
+    project = seeded_db.query(Project).filter(Project.name == "test-project").first()
+    experiment = Experiment(
+        project_id=project.id,
+        name="Test Experiment",
+        description="A test experiment",
+    )
+    seeded_db.add(experiment)
+    seeded_db.commit()
+
+    def override_get_db():
+        try:
+            yield seeded_db
+        finally:
+            pass
+
+    app.dependency_overrides[get_db] = override_get_db
+    yield TestClient(app)
+    app.dependency_overrides.clear()
