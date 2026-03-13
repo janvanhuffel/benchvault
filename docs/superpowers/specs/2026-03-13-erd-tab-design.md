@@ -9,7 +9,8 @@ Add a "Schema" tab to the frontend that renders an interactive Entity Relationsh
 - **Data source**: SQLAlchemy `Base.metadata.tables` (option B). No DB introspection. Reads Python model definitions at runtime.
 - **Detail level**: Full — columns, types, PK, FK, nullable, unique constraints.
 - **Rendering**: React Flow with dagre auto-layout. Interactive (zoom, pan, drag).
-- **No new backend dependencies**. Frontend adds `reactflow` and `dagre`.
+- **Sync check**: Compare models against live Postgres via Alembic's `compare_metadata`. Show sync status badge on the ERD page.
+- **No new backend dependencies** (Alembic is already installed). Frontend adds `reactflow` and `dagre`.
 
 ## Backend
 
@@ -66,6 +67,35 @@ Implementation: loop over `Base.metadata.sorted_tables`, for each table:
 
 Register router in `main.py`.
 
+### New endpoint: `GET /api/schema/sync`
+
+File: same `routes/schema.py`
+
+Uses `alembic.autogenerate.compare_metadata` to diff `Base.metadata` against the live Postgres schema. Returns:
+
+```json
+{
+  "in_sync": true,
+  "differences": []
+}
+```
+
+Or when out of sync:
+
+```json
+{
+  "in_sync": false,
+  "differences": [
+    "add_column: benchmark_runs.tags (VARCHAR)",
+    "remove_column: projects.description (TEXT)"
+  ]
+}
+```
+
+Implementation: create a temporary `MigrationContext` from the current DB engine and call `compare_metadata(context, Base.metadata)`. Format the raw diff tuples into human-readable strings.
+
+This requires a DB connection (unlike `/api/schema`), so it's a separate endpoint — the ERD renders immediately from models, then the sync badge updates asynchronously.
+
 ### Pydantic response schemas
 
 Add to `schemas.py` (or a new `schemas/schema.py` if preferred — but existing convention is single file):
@@ -75,6 +105,7 @@ Add to `schemas.py` (or a new `schemas/schema.py` if preferred — but existing 
 - `UniqueConstraintSchema(name, columns)`
 - `TableSchema(name, columns, foreign_keys, unique_constraints)`
 - `SchemaResponse(tables)`
+- `SyncResponse(in_sync, differences)`
 
 ## Frontend
 
@@ -93,6 +124,10 @@ Route: `/schema`
    - Target: referenced table node
    - Label: `column -> table.column`
 4. Render with `<ReactFlow>` including `<Controls>` and `<Background>`
+5. Fetch `GET /api/schema/sync` in parallel — show a sync status badge:
+   - Green "In Sync" if models match Postgres
+   - Red "Out of Sync" with expandable list of differences if not
+   - Loading spinner while the check runs
 
 ### Navigation
 
@@ -100,7 +135,7 @@ Add "Schema" link in `App.jsx` nav, route `/schema`.
 
 ### API function
 
-Add `getSchema()` to `api.js`.
+Add `getSchema()` and `getSchemaSync()` to `api.js`.
 
 ### Styling
 
@@ -124,3 +159,7 @@ cd frontend && npm install reactflow dagre
 4. ERD re-renders on next page visit
 
 No migration, no build step, no manual update.
+
+## Implementation note
+
+Build on a feature branch (e.g., `feat/erd-tab`), not directly on main.
