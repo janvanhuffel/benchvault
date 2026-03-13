@@ -49,8 +49,9 @@ def list_experiments(
     db: Session = Depends(get_db),
 ):
     query = (
-        db.query(Experiment, func.count(ExperimentRun.id).label("run_count"))
+        db.query(Experiment, func.count(BenchmarkRun.id).label("run_count"))
         .outerjoin(ExperimentRun, Experiment.id == ExperimentRun.experiment_id)
+        .outerjoin(BenchmarkRun, (ExperimentRun.run_id == BenchmarkRun.id) & (BenchmarkRun.deleted_at.is_(None)))
         .join(Project, Experiment.project_id == Project.id)
         .options(contains_eager(Experiment.project))
         .group_by(Experiment.id)
@@ -206,9 +207,15 @@ def update_experiment(
     db.commit()
     db.refresh(experiment)
 
-    run_count = db.query(func.count(ExperimentRun.id)).filter(
-        ExperimentRun.experiment_id == experiment.id
-    ).scalar()
+    run_count = (
+        db.query(func.count(BenchmarkRun.id))
+        .join(ExperimentRun, ExperimentRun.run_id == BenchmarkRun.id)
+        .filter(
+            ExperimentRun.experiment_id == experiment.id,
+            BenchmarkRun.deleted_at.is_(None),
+        )
+        .scalar()
+    )
 
     # Eager-load project for the summary
     project = db.query(Project).filter(Project.id == experiment.project_id).first()
