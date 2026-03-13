@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { getProjectRuns, deleteRuns } from "../api";
+import { getProjectRuns, deleteRuns, getExperiments, addRunsToExperiment } from "../api";
 
 export default function ProjectDetail() {
   const { name } = useParams();
@@ -16,6 +16,8 @@ export default function ProjectDetail() {
   });
   const [sortBy, setSortBy] = useState(null);
   const [sortDir, setSortDir] = useState("desc");
+  const [experiments, setExperiments] = useState([]);
+  const [showExpDropdown, setShowExpDropdown] = useState(false);
 
   const refresh = useCallback(() => getProjectRuns(name).then(setRuns), [name]);
 
@@ -105,6 +107,26 @@ export default function ProjectDetail() {
       .catch((err) => alert(`Delete failed: ${err.message}`));
   };
 
+  const handleOpenExpDropdown = async () => {
+    const exps = await getExperiments(name);
+    setExperiments(exps.filter((e) => e.status === "active"));
+    setShowExpDropdown(true);
+  };
+
+  const handleAddToExperiment = async (experimentId) => {
+    await addRunsToExperiment(experimentId, [...selected]);
+    setShowExpDropdown(false);
+    setSelected(new Set());
+    refresh();
+  };
+
+  useEffect(() => {
+    if (!showExpDropdown) return;
+    const handleClick = () => setShowExpDropdown(false);
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
+  }, [showExpDropdown]);
+
   if (loading) return <p className="empty-state">Loading runs...</p>;
 
   return (
@@ -136,6 +158,30 @@ export default function ProjectDetail() {
         <button className="btn-danger" onClick={handleDelete} disabled={selected.size < 1}>
           Delete Selected ({selected.size})
         </button>
+        {selected.size > 0 && (
+          <div style={{ position: "relative", display: "inline-block" }}>
+            <button className="btn" onClick={(e) => { e.stopPropagation(); handleOpenExpDropdown(); }}>
+              Add to Experiment &#9662;
+            </button>
+            {showExpDropdown && (
+              <div className="dropdown-menu">
+                {experiments.length === 0 ? (
+                  <div className="dropdown-item disabled">No active experiments</div>
+                ) : (
+                  experiments.map((exp) => (
+                    <div
+                      key={exp.id}
+                      className="dropdown-item"
+                      onClick={() => handleAddToExperiment(exp.id)}
+                    >
+                      {exp.name}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+        )}
         <Link to={`/projects/${encodeURIComponent(name)}/trash`} className="trash-link">
           Trash
         </Link>
@@ -153,6 +199,7 @@ export default function ProjectDetail() {
             {metricNames.map((m) => <th key={m} className="sortable metric-value" onClick={() => handleSort(m)}>{m}{sortIndicator(m)}</th>)}
             <th className="sortable" onClick={() => handleSort("date")}>Date{sortIndicator("date")}</th>
             <th>Note</th>
+            <th>Experiments</th>
           </tr>
         </thead>
         <tbody>
@@ -173,6 +220,19 @@ export default function ProjectDetail() {
               {metricNames.map((m) => <td key={m} className="metric-value">{getMetric(run, m)}</td>)}
               <td>{new Date(run.created_at).toLocaleDateString()}</td>
               <td>{run.note || "\u2014"}</td>
+              <td className="tag-list-cell">
+                {run.experiments && run.experiments.length > 0 ? (
+                  <div className="tag-list">
+                    {run.experiments.map((exp) => (
+                      <Link key={exp.id} to={`/experiments/${exp.id}`} className="experiment-tag">
+                        {exp.name}
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-muted">{"\u2014"}</span>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>

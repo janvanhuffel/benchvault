@@ -1245,3 +1245,62 @@ tr.selected {
 .notes-preview li {
   margin-bottom: 0.25rem;
 }
+
+/* ===== Experiment Tags in Project Detail ===== */
+
+.experiment-tag {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: var(--color-accent);
+  color: white;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.experiment-tag:hover {
+  opacity: 0.85;
+}
+
+.tag-list-cell {
+  max-width: 200px;
+}
+
+/* ===== Dropdown Menu ===== */
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.25rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 200px;
+  z-index: 10;
+  overflow: hidden;
+}
+
+.dropdown-item {
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: var(--color-text);
+}
+
+.dropdown-item:hover {
+  background: var(--color-accent-subtle);
+}
+
+.dropdown-item.disabled {
+  color: var(--color-text-muted);
+  cursor: default;
+  font-style: italic;
+}
+
+.dropdown-item.disabled:hover {
+  background: transparent;
+}
