@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Full stack (Docker Compose)
 ```bash
 docker compose up --build                              # start all services
-docker compose exec backend alembic upgrade head       # run migrations + seed data
+docker compose exec backend uv run alembic upgrade head # run migrations + seed data
 ```
 
 ### Backend (uses uv)

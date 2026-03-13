@@ -21,6 +21,7 @@ services:
       - db
     volumes:
       - ./backend:/app
+      - /app/.venv
 
   frontend:
     build:

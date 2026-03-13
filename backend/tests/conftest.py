@@ -54,13 +54,20 @@ def seeded_db(db):
     dataset = db.query(Dataset).filter_by(name="test-dataset").one()
     db.add(DatasetVersion(
         dataset_id=dataset.id, version="v1.0",
-        num_classes=10, train_count=800, val_count=100, test_count=100,
+        num_classes=3,
+        class_names=["cat", "dog", "bird"],
+        train_count=800, val_count=100, test_count=100,
         total_samples=1000, total_size_gb=0.5, file_type="jpg",
         storage_url="s3://test-bucket/test-dataset/v1.0/",
     ))
 
-    db.add(Metric(name="accuracy", higher_is_better=True))
-    db.add(Metric(name="f1_score", higher_is_better=True))
+    # Scalar metrics
+    db.add(Metric(name="accuracy", higher_is_better=True, is_per_class=False))
+    db.add(Metric(name="f1_score", higher_is_better=True, is_per_class=False))
+    # Per-class metrics
+    db.add(Metric(name="iou", higher_is_better=True, is_per_class=True))
+    db.add(Metric(name="precision_class", higher_is_better=True, is_per_class=True))
+    db.add(Metric(name="recall_class", higher_is_better=True, is_per_class=True))
     db.commit()
     return db
 

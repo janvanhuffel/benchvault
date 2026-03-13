@@ -13,6 +13,7 @@ class RunSubmission(BaseModel):
     epoch: int
     note: str | None = None
     metrics: dict[str, float]
+    per_class_metrics: dict[str, dict[str, float]] | None = None
 
 
 class RunCreatedResponse(BaseModel):
@@ -105,6 +106,7 @@ class MetricResponse(BaseModel):
     id: int
     name: str
     higher_is_better: bool
+    is_per_class: bool
     description: str | None
 
     model_config = {"from_attributes": True}
@@ -129,10 +131,23 @@ class RunResponse(BaseModel):
     metrics: list[MetricValueResponse]
 
 
+class PerClassRunValues(BaseModel):
+    run_id: int
+    values: dict[str, float]
+
+
+class PerClassCompareGroup(BaseModel):
+    metric_name: str
+    higher_is_better: bool
+    classes: list[str]
+    runs: list[PerClassRunValues]
+
+
 class CompareResponse(BaseModel):
     metric_names: list[str]
     higher_is_better: dict[str, bool]
     runs: list[RunResponse]
+    per_class_metrics: list[PerClassCompareGroup]
 
 
 # --- Schema introspection ---
