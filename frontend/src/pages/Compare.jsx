@@ -141,7 +141,7 @@ export default function Compare() {
                         key={`${group.metric_name}-${run.id}`}
                         className={gi > 0 && ri === 0 ? "pcm-group-sep" : ""}
                       >
-                        {run.model_version}
+                        {run.model_name} / {run.model_version}
                       </th>
                     ))
                   )}

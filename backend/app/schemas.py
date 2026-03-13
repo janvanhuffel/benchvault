@@ -106,6 +106,7 @@ class MetricResponse(BaseModel):
     id: int
     name: str
     higher_is_better: bool
+    is_per_class: bool
     description: str | None
 
     model_config = {"from_attributes": True}

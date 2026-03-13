@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
-from app.models import BenchmarkRun, RunClassMetric, Metric
+from app.models import BenchmarkRun
 from app.routes.projects import _run_to_response
 from app.schemas import CompareResponse, PerClassCompareGroup, PerClassRunValues
 
