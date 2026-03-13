@@ -2,7 +2,7 @@ import json
 
 from sqlalchemy import (
     Column, Integer, String, Float, Boolean, Text,
-    DateTime, ForeignKey, UniqueConstraint,
+    DateTime, ForeignKey, UniqueConstraint, false,
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -92,9 +92,11 @@ class Metric(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True, nullable=False)
     higher_is_better = Column(Boolean, nullable=False, default=True)
+    is_per_class = Column(Boolean, nullable=False, default=False, server_default=false())
     description = Column(Text, nullable=True)
 
     run_metrics = relationship("RunMetric", back_populates="metric")
+    run_class_metrics = relationship("RunClassMetric", back_populates="metric")
 
 
 class ModelVersion(Base):
@@ -128,6 +130,7 @@ class BenchmarkRun(Base):
     model_version = relationship("ModelVersion", back_populates="runs")
     dataset_version = relationship("DatasetVersion", back_populates="runs")
     run_metrics = relationship("RunMetric", back_populates="run", cascade="all, delete-orphan")
+    run_class_metrics = relationship("RunClassMetric", back_populates="run", cascade="all, delete-orphan")
 
 
 class RunMetric(Base):
@@ -143,4 +146,21 @@ class RunMetric(Base):
 
     __table_args__ = (
         UniqueConstraint("run_id", "metric_id", name="uq_run_metric"),
+    )
+
+
+class RunClassMetric(Base):
+    __tablename__ = "run_class_metrics"
+
+    id = Column(Integer, primary_key=True)
+    run_id = Column(Integer, ForeignKey("benchmark_runs.id"), nullable=False)
+    metric_id = Column(Integer, ForeignKey("metrics.id"), nullable=False)
+    class_name = Column(String, nullable=False)
+    value = Column(Float, nullable=False)
+
+    run = relationship("BenchmarkRun", back_populates="run_class_metrics")
+    metric = relationship("Metric", back_populates="run_class_metrics")
+
+    __table_args__ = (
+        UniqueConstraint("run_id", "metric_id", "class_name", name="uq_run_class_metric"),
     )
