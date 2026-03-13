@@ -1,7 +1,10 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from sqlalchemy import UniqueConstraint
+from sqlalchemy.orm import Session
+from alembic.autogenerate import compare_metadata
+from alembic.migration import MigrationContext
 
-from app.database import Base
+from app.database import Base, get_db
 from app.models import *  # noqa: F401 — ensure all models are registered on Base.metadata
 from app.schemas import (
     ColumnSchema,
@@ -9,6 +12,7 @@ from app.schemas import (
     UniqueConstraintSchema,
     TableSchema,
     SchemaResponse,
+    SyncResponse,
 )
 
 router = APIRouter(prefix="/api")
@@ -52,3 +56,31 @@ def get_schema():
         ))
 
     return SchemaResponse(tables=tables)
+
+
+@router.get("/schema/sync", response_model=SyncResponse)
+def get_schema_sync(db: Session = Depends(get_db)):
+    connection = db.connection()
+    migration_context = MigrationContext.configure(connection)
+    diffs = compare_metadata(migration_context, Base.metadata)
+
+    differences = []
+    for diff in diffs:
+        if isinstance(diff, tuple):
+            op = diff[0]
+            if op == "add_table":
+                differences.append(f"add_table: {diff[1].name}")
+            elif op == "remove_table":
+                differences.append(f"remove_table: {diff[1].name}")
+            elif op == "add_column":
+                schema, table_name, col = diff[1], diff[2], diff[3]
+                differences.append(f"add_column: {table_name}.{col.name} ({col.type})")
+            elif op == "remove_column":
+                schema, table_name, col = diff[1], diff[2], diff[3]
+                differences.append(f"remove_column: {table_name}.{col.name} ({col.type})")
+            else:
+                differences.append(str(diff))
+        else:
+            differences.append(str(diff))
+
+    return SyncResponse(in_sync=len(differences) == 0, differences=differences)

@@ -53,3 +53,15 @@ def test_schema_unique_constraints(client):
 
     uq = next(u for u in run_metrics["unique_constraints"] if u["name"] == "uq_run_metric")
     assert sorted(uq["columns"]) == ["metric_id", "run_id"]
+
+
+def test_schema_sync_in_sync(client):
+    """When DB was created from models (as in tests), sync should report in_sync."""
+    response = client.get("/api/schema/sync")
+    assert response.status_code == 200
+
+    data = response.json()
+    assert "in_sync" in data
+    assert "differences" in data
+    assert data["in_sync"] is True
+    assert data["differences"] == []
