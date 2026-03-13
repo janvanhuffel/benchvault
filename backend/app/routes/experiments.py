@@ -18,7 +18,6 @@ from app.schemas import (
     ExperimentUpdateRequest,
     RunExperimentInfo,
     RunIdsRequest,
-    RunResponse,
 )
 
 router = APIRouter(prefix="/api")
