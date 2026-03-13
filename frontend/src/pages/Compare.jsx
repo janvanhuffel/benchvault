@@ -7,7 +7,7 @@ function getHslColor(value) {
   const v = Math.max(0, Math.min(1, value));
   // red(0) → yellow(60) → green(120)
   const hue = v * 120;
-  return `hsla(${hue}, 70%, 45%, 0.18)`;
+  return `hsla(${hue}, 70%, 45%, 0.35)`;
 }
 
 export default function Compare() {
