@@ -108,16 +108,24 @@ export default function ProjectDetail() {
   };
 
   const handleOpenExpDropdown = async () => {
-    const exps = await getExperiments(name);
-    setExperiments(exps.filter((e) => e.status === "active"));
-    setShowExpDropdown(true);
+    try {
+      const exps = await getExperiments(name);
+      setExperiments(exps.filter((e) => e.status === "active"));
+      setShowExpDropdown(true);
+    } catch (err) {
+      alert(`Failed to load experiments: ${err.message}`);
+    }
   };
 
   const handleAddToExperiment = async (experimentId) => {
-    await addRunsToExperiment(experimentId, [...selected]);
-    setShowExpDropdown(false);
-    setSelected(new Set());
-    refresh();
+    try {
+      await addRunsToExperiment(experimentId, [...selected]);
+      setShowExpDropdown(false);
+      setSelected(new Set());
+      refresh();
+    } catch (err) {
+      alert(`Failed to add runs: ${err.message}`);
+    }
   };
 
   useEffect(() => {
