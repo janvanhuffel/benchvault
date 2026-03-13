@@ -4,6 +4,7 @@ import ProjectDetail from "./pages/ProjectDetail";
 import Compare from "./pages/Compare";
 import DatasetList from "./pages/DatasetList";
 import ProjectTrash from "./pages/ProjectTrash";
+import ExperimentList from "./pages/ExperimentList";
 import SchemaERD from "./pages/SchemaERD";
 import useTheme from "./hooks/useTheme";
 import "./App.css";
@@ -34,6 +35,12 @@ function Nav() {
           Datasets
         </Link>
         <Link
+          to="/experiments"
+          className={`nav-link${isActive(["/experiments"]) ? " active" : ""}`}
+        >
+          Experiments
+        </Link>
+        <Link
           to="/schema"
           className={`nav-link${isActive(["/schema"]) ? " active" : ""}`}
         >
@@ -58,6 +65,7 @@ function App() {
           <Route path="/projects/:name/trash" element={<ProjectTrash />} />
           <Route path="/compare" element={<Compare />} />
           <Route path="/datasets" element={<DatasetList />} />
+          <Route path="/experiments" element={<ExperimentList />} />
           <Route path="/schema" element={<SchemaERD />} />
         </Routes>
       </main>
