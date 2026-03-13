@@ -66,8 +66,8 @@ def seeded_db(db):
     db.add(Metric(name="f1_score", higher_is_better=True, is_per_class=False))
     # Per-class metrics
     db.add(Metric(name="iou", higher_is_better=True, is_per_class=True))
-    db.add(Metric(name="precision", higher_is_better=True, is_per_class=True))
-    db.add(Metric(name="recall", higher_is_better=True, is_per_class=True))
+    db.add(Metric(name="precision_class", higher_is_better=True, is_per_class=True))
+    db.add(Metric(name="recall_class", higher_is_better=True, is_per_class=True))
     db.commit()
     return db
 

@@ -35,17 +35,22 @@ def upgrade() -> None:
         sa.UniqueConstraint("run_id", "metric_id", "class_name", name="uq_run_class_metric"),
     )
 
-    # 3. Seed per-class metric types (upsert to handle pre-existing rows)
-    for name, higher_is_better in [("iou", True), ("precision", True), ("recall", True)]:
+    # 3. Seed per-class metric types
+    # Note: precision and recall already exist as scalar metrics from seed data,
+    # so we create separate precision_class and recall_class for per-class use.
+    # iou may or may not exist, so use ON CONFLICT DO NOTHING.
+    for name in ["iou", "precision_class", "recall_class"]:
         op.execute(
             sa.text(
                 "INSERT INTO metrics (name, higher_is_better, is_per_class) "
-                "VALUES (:name, :hib, true) "
-                "ON CONFLICT (name) DO UPDATE SET is_per_class = true, higher_is_better = EXCLUDED.higher_is_better"
-            ).bindparams(name=name, hib=higher_is_better)
+                "VALUES (:name, true, true) "
+                "ON CONFLICT (name) DO NOTHING"
+            ).bindparams(name=name)
         )
 
 
 def downgrade() -> None:
     op.drop_table("run_class_metrics")
+    # Delete only the metrics added by this migration
+    op.execute("DELETE FROM metrics WHERE name IN ('iou', 'precision_class', 'recall_class')")
     op.drop_column("metrics", "is_per_class")

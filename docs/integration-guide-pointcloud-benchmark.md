@@ -80,8 +80,10 @@ version `v1.0`.
 ### Metrics
 
 The following metrics must be registered in BenchVault before any run can reference
-them. The migration `008_add_per_class_metrics.py` already seeds `iou`, `precision`,
-and `recall` as per-class metrics. Add the scalar metrics separately.
+them. The migration `008_add_per_class_metrics.py` already seeds `iou`,
+`precision_class`, and `recall_class` as per-class metrics. Note that `precision` and
+`recall` exist as separate scalar metrics from the demo seed data. Add the scalar
+metrics separately.
 
 | name | higher_is_better | is_per_class | maps from |
 |---|---|---|---|
@@ -89,10 +91,10 @@ and `recall` as per-class metrics. Add the scalar metrics separately.
 | `oa` | true | false | `results["oa"]` |
 | `macc` | true | false | `results["macc"]` |
 | `iou` | true | **true** | `results["per_class_iou"]` |
-| `precision` | true | **true** | `results["per_class_precision"]` |
-| `recall` | true | **true** | `results["per_class_recall"]` |
+| `precision_class` | true | **true** | `results["per_class_precision"]` |
+| `recall_class` | true | **true** | `results["per_class_recall"]` |
 
-`iou`, `precision`, and `recall` are already seeded by migration
+`iou`, `precision_class`, and `recall_class` are already seeded by migration
 `008_add_per_class_metrics`. Add `miou`, `oa`, and `macc` in a new migration or via
 the API.
 
@@ -130,8 +132,8 @@ the API.
       "sectioninsulator": 0.52,
       "noise": 0.79
     },
-    "precision": { "ground": 0.93, "..." : 0.0 },
-    "recall":    { "ground": 0.89, "..." : 0.0 }
+    "precision_class": { "ground": 0.93, "..." : 0.0 },
+    "recall_class":    { "ground": 0.89, "..." : 0.0 }
   }
 }
 ```
@@ -177,8 +179,8 @@ Key name mapping:
 | `oa` | `oa` | `metrics` |
 | `macc` | `macc` | `metrics` |
 | `per_class_iou` | `iou` | `per_class_metrics` |
-| `per_class_precision` | `precision` | `per_class_metrics` |
-| `per_class_recall` | `recall` | `per_class_metrics` |
+| `per_class_precision` | `precision_class` | `per_class_metrics` |
+| `per_class_recall` | `recall_class` | `per_class_metrics` |
 
 Note: when class names are taken from the dataset registry, `results.json` uses
 **string class names** as keys. When `--class-names` is not passed, integer strings
@@ -204,8 +206,8 @@ BENCHVAULT_URL = "http://localhost:8000"  # adjust for your deployment
 SCALAR_METRICS = {"miou", "oa", "macc"}
 PER_CLASS_METRIC_MAP = {
     "per_class_iou":       "iou",
-    "per_class_precision": "precision",
-    "per_class_recall":    "recall",
+    "per_class_precision": "precision_class",
+    "per_class_recall":    "recall_class",
 }
 
 
@@ -303,14 +305,14 @@ curl -s -X POST http://localhost:8000/api/runs \
         "sectioninsulator": 0.52,
         "noise": 0.79
       },
-      "precision": {
+      "precision_class": {
         "ground": 0.93, "platform": 0.80, "cable": 0.68,
         "vegetation": 0.90, "rail": 0.85, "traverse": 0.74,
         "pole": 0.71, "registration arm": 0.63, "tensiondevice": 0.60,
         "balise": 0.57, "diskinsulator": 0.51, "sectioninsulator": 0.55,
         "noise": 0.82
       },
-      "recall": {
+      "recall_class": {
         "ground": 0.89, "platform": 0.74, "cable": 0.62,
         "vegetation": 0.86, "rail": 0.81, "traverse": 0.70,
         "pole": 0.67, "registration arm": 0.59, "tensiondevice": 0.56,

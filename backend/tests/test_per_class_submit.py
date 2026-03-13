@@ -10,7 +10,7 @@ VALID_PAYLOAD = {
 
 PER_CLASS = {
     "iou": {"cat": 0.9, "dog": 0.8, "bird": 0.7},
-    "precision": {"cat": 0.95, "dog": 0.85, "bird": 0.75},
+    "precision_class": {"cat": 0.95, "dog": 0.85, "bird": 0.75},
 }
 
 
