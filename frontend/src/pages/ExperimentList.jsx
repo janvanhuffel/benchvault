@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getExperiments, getProjects, createExperiment } from "../api";
 
@@ -10,12 +10,11 @@ export default function ExperimentList() {
   const [form, setForm] = useState({ project_name: "", name: "", description: "" });
   const [formError, setFormError] = useState("");
 
-  const load = () => {
-    setLoading(true);
-    getExperiments().then(setExperiments).finally(() => setLoading(false));
-  };
+  const refresh = useCallback(() => getExperiments().then(setExperiments), []);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    refresh().finally(() => setLoading(false));
+  }, [refresh]);
 
   const openForm = () => {
     setShowForm(true);
@@ -41,7 +40,7 @@ export default function ExperimentList() {
       });
       setForm({ project_name: "", name: "", description: "" });
       setShowForm(false);
-      load();
+      refresh();
     } catch (e) {
       setFormError(e.message || "Failed to create experiment");
     }
@@ -62,7 +61,7 @@ export default function ExperimentList() {
       {showForm && (
         <div className="card" style={{ marginBottom: "1.5rem", padding: "1rem" }}>
           <h3 style={{ marginBottom: "0.75rem" }}>New Experiment</h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          <div className="experiment-form" style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
             <label>
               Project
               <select

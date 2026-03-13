@@ -981,7 +981,7 @@ tr.selected {
 }
 
 /* Experiment form elements */
-.experiment-list label {
+.experiment-form label {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -989,9 +989,9 @@ tr.selected {
   color: var(--color-text-secondary);
 }
 
-.experiment-list label input,
-.experiment-list label select,
-.experiment-list label textarea {
+.experiment-form label input,
+.experiment-form label select,
+.experiment-form label textarea {
   font-size: 0.9rem;
   padding: 0.4rem 0.5rem;
   border: 1px solid var(--color-border);

@@ -108,7 +108,13 @@ export function deleteExperiment(id) {
 }
 
 export function addRunsToExperiment(experimentId, runIds) {
-  return postJson(`/api/experiments/${experimentId}/runs`, { run_ids: runIds });
+  return fetch(`${API_URL}/api/experiments/${experimentId}/runs`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ run_ids: runIds }),
+  }).then((r) => {
+    if (!r.ok) throw new Error(`POST /api/experiments/${experimentId}/runs failed: ${r.status}`);
+  });
 }
 
 export function removeRunsFromExperiment(experimentId, runIds) {

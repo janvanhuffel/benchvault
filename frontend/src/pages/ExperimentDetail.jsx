@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import {
@@ -29,56 +29,81 @@ export default function ExperimentDetail() {
   // Delete confirmation
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const load = () => {
-    setLoading(true);
-    getExperiment(id).then((data) => {
-      setExperiment(data);
-      setNotesDraft(data.notes || "");
-    }).finally(() => setLoading(false));
-  };
+  const refresh = useCallback(() => getExperiment(id).then((data) => {
+    setExperiment(data);
+    setNotesDraft(data.notes || "");
+  }), [id]);
 
-  useEffect(() => { load(); }, [id]);
+  useEffect(() => {
+    refresh().finally(() => setLoading(false));
+  }, [refresh]);
 
   const handleToggleStatus = async () => {
-    const newStatus = experiment.status === "active" ? "concluded" : "active";
-    await updateExperiment(id, { status: newStatus });
-    load();
+    try {
+      const newStatus = experiment.status === "active" ? "concluded" : "active";
+      await updateExperiment(id, { status: newStatus });
+      refresh();
+    } catch (e) {
+      console.error("Failed to toggle status:", e);
+    }
   };
 
   const handleSaveName = async () => {
-    if (nameDraft.trim() && nameDraft.trim() !== experiment.name) {
-      await updateExperiment(id, { name: nameDraft.trim() });
-      load();
+    if (!editingName) return;
+    try {
+      if (nameDraft.trim() && nameDraft.trim() !== experiment.name) {
+        await updateExperiment(id, { name: nameDraft.trim() });
+        refresh();
+      }
+    } catch (e) {
+      console.error("Failed to save name:", e);
     }
     setEditingName(false);
   };
 
   const handleSaveDesc = async () => {
-    const val = descDraft.trim() || null;
-    if (val !== experiment.description) {
-      await updateExperiment(id, { description: val });
-      load();
+    try {
+      const val = descDraft.trim() || null;
+      if (val !== experiment.description) {
+        await updateExperiment(id, { description: val });
+        refresh();
+      }
+    } catch (e) {
+      console.error("Failed to save description:", e);
     }
     setEditingDesc(false);
   };
 
   const handleSaveNotes = async () => {
     setNotesSaving(true);
-    await updateExperiment(id, { notes: notesDraft || null });
-    setNotesSaving(false);
-    setNotesMode("preview");
-    load();
+    try {
+      await updateExperiment(id, { notes: notesDraft || null });
+      setNotesMode("preview");
+      refresh();
+    } catch (e) {
+      console.error("Failed to save notes:", e);
+    } finally {
+      setNotesSaving(false);
+    }
   };
 
   const handleDelete = async () => {
-    await deleteExperiment(id);
-    navigate("/experiments");
+    try {
+      await deleteExperiment(id);
+      navigate("/experiments");
+    } catch (e) {
+      console.error("Failed to delete experiment:", e);
+    }
   };
 
   const handleRemoveSelected = async () => {
-    await removeRunsFromExperiment(id, [...selected]);
-    setSelected(new Set());
-    load();
+    try {
+      await removeRunsFromExperiment(id, [...selected]);
+      setSelected(new Set());
+      refresh();
+    } catch (e) {
+      console.error("Failed to remove runs:", e);
+    }
   };
 
   const toggleSelect = (runId) => {
