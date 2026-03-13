@@ -999,3 +999,249 @@ tr.selected {
   background: var(--color-surface);
   color: var(--color-text);
 }
+
+/* ===== Experiment Detail ===== */
+
+/* Breadcrumb */
+.breadcrumb {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 1rem;
+}
+
+.breadcrumb a {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+/* Experiment header */
+.experiment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.experiment-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.experiment-title {
+  margin: 0;
+  cursor: pointer;
+}
+
+.experiment-project {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.experiment-header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.edit-hint {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+*:hover > .edit-hint {
+  opacity: 1;
+}
+
+.inline-edit-input {
+  font-size: 1.4rem;
+  font-weight: 700;
+  border: 1px solid var(--color-accent);
+  border-radius: 4px;
+  padding: 0.2rem 0.4rem;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.inline-edit-textarea {
+  width: 100%;
+  border: 1px solid var(--color-accent);
+  border-radius: 4px;
+  padding: 0.4rem 0.5rem;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.85rem;
+  resize: vertical;
+}
+
+/* Toggle switch */
+.toggle-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.toggle-switch input {
+  display: none;
+}
+
+.toggle-slider {
+  width: 36px;
+  height: 20px;
+  background: var(--color-border);
+  border-radius: 10px;
+  position: relative;
+  transition: background 0.2s;
+}
+
+.toggle-slider::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.2s;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background: #22c55e;
+}
+
+.toggle-switch input:checked + .toggle-slider::after {
+  transform: translateX(16px);
+}
+
+/* Subtle delete button */
+.btn-text {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+  color: var(--color-text-secondary);
+}
+
+.btn-text:hover {
+  color: var(--color-text);
+}
+
+.btn-subtle {
+  color: var(--color-text-muted);
+}
+
+.btn-text-danger {
+  color: #ef4444;
+}
+
+.delete-confirm {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+/* Experiment description */
+.experiment-description {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.editable-text {
+  cursor: pointer;
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+/* Experiment runs */
+.experiment-runs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.experiment-runs-header h3 {
+  margin: 0;
+}
+
+.experiment-runs-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Notes */
+.experiment-notes {
+  margin-top: 2rem;
+}
+
+.experiment-notes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.experiment-notes-header h3 {
+  margin: 0;
+}
+
+.experiment-notes-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.experiment-notes-body {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.notes-editor {
+  width: 100%;
+  min-height: 200px;
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  font-family: monospace;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+}
+
+.notes-preview {
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: var(--color-text);
+}
+
+.notes-preview h1,
+.notes-preview h2,
+.notes-preview h3 {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.notes-preview ul,
+.notes-preview ol {
+  padding-left: 1.25rem;
+}
+
+.notes-preview li {
+  margin-bottom: 0.25rem;
+}
