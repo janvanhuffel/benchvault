@@ -546,6 +546,11 @@ select:focus {
   display: flex;
   flex-direction: column;
   height: calc(100vh - 53px);
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: -2rem;
 }
 
 .erd-header {
