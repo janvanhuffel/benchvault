@@ -164,3 +164,38 @@ class RunClassMetric(Base):
     __table_args__ = (
         UniqueConstraint("run_id", "metric_id", "class_name", name="uq_run_class_metric"),
     )
+
+
+class Experiment(Base):
+    __tablename__ = "experiments"
+    __table_args__ = (
+        UniqueConstraint("project_id", "name", name="uq_experiment_project_name"),
+    )
+
+    id = Column(Integer, primary_key=True)
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False)
+    name = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    notes = Column(Text, nullable=True)
+    status = Column(String, nullable=False, server_default="active")
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
+    deleted_at = Column(DateTime(timezone=True), nullable=True, default=None, index=True)
+
+    project = relationship("Project")
+    experiment_runs = relationship("ExperimentRun", back_populates="experiment", cascade="all, delete-orphan")
+
+
+class ExperimentRun(Base):
+    __tablename__ = "experiment_runs"
+    __table_args__ = (
+        UniqueConstraint("experiment_id", "run_id", name="uq_experiment_run"),
+    )
+
+    id = Column(Integer, primary_key=True)
+    experiment_id = Column(Integer, ForeignKey("experiments.id", ondelete="CASCADE"), nullable=False)
+    run_id = Column(Integer, ForeignKey("benchmark_runs.id", ondelete="CASCADE"), nullable=False)
+    added_at = Column(DateTime, server_default=func.now(), nullable=False)
+
+    experiment = relationship("Experiment", back_populates="experiment_runs")
+    run = relationship("BenchmarkRun")

@@ -73,3 +73,65 @@ export function getSchema() {
 export function getSchemaSync() {
   return fetchJson("/api/schema/sync");
 }
+
+// Experiments
+export function getExperiments(projectName) {
+  const params = projectName ? `?project_name=${encodeURIComponent(projectName)}` : "";
+  return fetchJson(`/api/experiments${params}`);
+}
+
+export function createExperiment(body) {
+  return postJson("/api/experiments", body);
+}
+
+export function getExperiment(id) {
+  return fetchJson(`/api/experiments/${id}`);
+}
+
+export function updateExperiment(id, body) {
+  return fetch(`${API_URL}/api/experiments/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  }).then((r) => {
+    if (!r.ok) throw new Error(`PATCH /api/experiments/${id} failed: ${r.status}`);
+    return r.json();
+  });
+}
+
+export function deleteExperiment(id) {
+  return fetch(`${API_URL}/api/experiments/${id}`, {
+    method: "DELETE",
+  }).then((r) => {
+    if (!r.ok) throw new Error(`DELETE /api/experiments/${id} failed: ${r.status}`);
+    return r.json();
+  });
+}
+
+export function getExperimentTrash() {
+  return fetchJson("/api/experiments/trash");
+}
+
+export function restoreExperiments(experimentIds) {
+  return postJson("/api/experiments/restore", { experiment_ids: experimentIds });
+}
+
+export function addRunsToExperiment(experimentId, runIds) {
+  return fetch(`${API_URL}/api/experiments/${experimentId}/runs`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ run_ids: runIds }),
+  }).then((r) => {
+    if (!r.ok) throw new Error(`POST /api/experiments/${experimentId}/runs failed: ${r.status}`);
+  });
+}
+
+export function removeRunsFromExperiment(experimentId, runIds) {
+  return fetch(`${API_URL}/api/experiments/${experimentId}/runs`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ run_ids: runIds }),
+  }).then((r) => {
+    if (!r.ok) throw new Error(`DELETE /api/experiments/${experimentId}/runs failed: ${r.status}`);
+  });
+}

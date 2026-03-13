@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
+from typing import Literal
 
 
 # --- Submission ---
@@ -118,6 +119,11 @@ class MetricValueResponse(BaseModel):
     higher_is_better: bool
 
 
+class RunExperimentInfo(BaseModel):
+    id: int
+    name: str
+
+
 class RunResponse(BaseModel):
     id: int
     project: str
@@ -129,6 +135,7 @@ class RunResponse(BaseModel):
     note: str | None
     created_at: datetime
     metrics: list[MetricValueResponse]
+    experiments: list[RunExperimentInfo] = []
 
 
 class PerClassRunValues(BaseModel):
@@ -185,3 +192,43 @@ class SchemaResponse(BaseModel):
 class SyncResponse(BaseModel):
     in_sync: bool
     differences: list[str]
+
+
+class ExperimentIdsRequest(BaseModel):
+    experiment_ids: list[int]
+
+
+class ExperimentCreateRequest(BaseModel):
+    project_name: str
+    name: str
+    description: str | None = None
+
+
+class ExperimentUpdateRequest(BaseModel):
+    name: str | None = None
+    description: str | None = None
+    notes: str | None = None
+    status: Literal["active", "concluded"] | None = None
+
+
+class ExperimentSummaryResponse(BaseModel):
+    id: int
+    name: str
+    project_name: str
+    description: str | None
+    status: str
+    run_count: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class ExperimentDetailResponse(BaseModel):
+    id: int
+    name: str
+    project_name: str
+    description: str | None
+    notes: str | None
+    status: str
+    created_at: datetime
+    updated_at: datetime
+    runs: list[RunResponse]

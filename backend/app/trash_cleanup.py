@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.orm import Session
 
-from app.models import BenchmarkRun
+from app.models import BenchmarkRun, Experiment
 
 _last_cleanup: datetime | None = None
 _CLEANUP_INTERVAL = timedelta(hours=24)
@@ -23,6 +23,10 @@ def maybe_cleanup_trash(db: Session, force: bool = False) -> None:
     db.query(BenchmarkRun).filter(
         BenchmarkRun.deleted_at.isnot(None),
         BenchmarkRun.deleted_at < cutoff,
+    ).delete(synchronize_session="fetch")
+    db.query(Experiment).filter(
+        Experiment.deleted_at.isnot(None),
+        Experiment.deleted_at < cutoff,
     ).delete(synchronize_session="fetch")
     db.commit()
 
