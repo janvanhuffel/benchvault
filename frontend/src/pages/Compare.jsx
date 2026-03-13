@@ -2,6 +2,14 @@ import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { compareRuns } from "../api";
 
+function getHslColor(value) {
+  // Clamp to [0, 1]
+  const v = Math.max(0, Math.min(1, value));
+  // red(0) → yellow(60) → green(120)
+  const hue = v * 120;
+  return `hsla(${hue}, 70%, 45%, 0.18)`;
+}
+
 export default function Compare() {
   const [searchParams] = useSearchParams();
   const idsParam = searchParams.get("run_ids");
@@ -47,9 +55,16 @@ export default function Compare() {
     return metric ? metric.value : null;
   };
 
+  const perClass = data.per_class_metrics || [];
+  // Check if runs have different dataset versions (for info message)
+  const datasetVersions = new Set(data.runs.map((r) => `${r.dataset}/${r.dataset_version}`));
+  const hasMixedVersions = datasetVersions.size > 1;
+
   return (
     <div>
       <h1>Run Comparison</h1>
+
+      {/* Scalar metrics table */}
       <table>
         <thead>
           <tr>
@@ -93,6 +108,85 @@ export default function Compare() {
           })}
         </tbody>
       </table>
+
+      {/* Per-class metrics section */}
+      {hasMixedVersions && perClass.length === 0 && (
+        <p className="pcm-info">
+          Per-class comparison is only available when all runs use the same dataset version.
+        </p>
+      )}
+
+      {perClass.length > 0 && (
+        <div className="pcm-section">
+          <h2>Per-Class Metrics</h2>
+          <div style={{ overflowX: "auto" }}>
+            <table className="pcm-table">
+              <thead>
+                <tr>
+                  <th rowSpan={2} style={{ textAlign: "left" }}>Class</th>
+                  {perClass.map((group, gi) => (
+                    <th
+                      key={group.metric_name}
+                      colSpan={data.runs.length}
+                      className={`pcm-group-header${gi > 0 ? " pcm-group-sep" : ""}`}
+                    >
+                      {group.metric_name} ({group.higher_is_better ? "\u2191" : "\u2193"})
+                    </th>
+                  ))}
+                </tr>
+                <tr>
+                  {perClass.map((group, gi) =>
+                    data.runs.map((run, ri) => (
+                      <th
+                        key={`${group.metric_name}-${run.id}`}
+                        className={gi > 0 && ri === 0 ? "pcm-group-sep" : ""}
+                      >
+                        {run.model_version}
+                      </th>
+                    ))
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {perClass[0].classes.map((className) => (
+                  <tr key={className}>
+                    <td className="pcm-class-name">{className}</td>
+                    {perClass.map((group, gi) => {
+                      // Find best value for this class across runs
+                      const classValues = group.runs
+                        .map((rv) => rv.values[className])
+                        .filter((v) => v !== undefined && v !== null);
+                      const best = classValues.length > 0
+                        ? (group.higher_is_better ? Math.max(...classValues) : Math.min(...classValues))
+                        : null;
+
+                      return data.runs.map((run, ri) => {
+                        const runData = group.runs.find((rv) => rv.run_id === run.id);
+                        const val = runData?.values[className];
+                        const isBest = val !== undefined && val !== null && val === best && classValues.length > 1;
+
+                        return (
+                          <td
+                            key={`${group.metric_name}-${className}-${run.id}`}
+                            className={gi > 0 && ri === 0 ? "pcm-group-sep" : ""}
+                            style={{
+                              backgroundColor: val !== undefined && val !== null ? getHslColor(val) : undefined,
+                              fontWeight: isBest ? "bold" : undefined,
+                              fontVariantNumeric: "tabular-nums",
+                            }}
+                          >
+                            {val !== undefined && val !== null ? val.toFixed(4) : "\u2014"}
+                          </td>
+                        );
+                      });
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
