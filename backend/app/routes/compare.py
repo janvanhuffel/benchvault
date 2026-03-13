@@ -61,4 +61,5 @@ def compare_runs(
         metric_names=sorted(metric_names),
         higher_is_better=higher_is_better,
         runs=run_responses,
+        per_class_metrics=[],
     )

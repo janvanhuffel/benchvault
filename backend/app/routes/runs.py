@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import (
     Project, Dataset, DatasetVersion, Metric,
-    ModelVersion, BenchmarkRun, RunMetric,
+    ModelVersion, BenchmarkRun, RunMetric, RunClassMetric,
 )
 from app.schemas import RunSubmission, RunCreatedResponse, RunIdsRequest
 
@@ -86,18 +86,65 @@ def submit_run(submission: RunSubmission, db: Session = Depends(get_db)):
             detail=f"Dataset_version not found: {submission.dataset_version} for dataset {submission.dataset}",
         )
 
-    # Validate all metrics
-    submitted_metric_names = set(submission.metrics.keys())
+    # Load all referenced metrics (scalar + per-class)
+    all_metric_names = set(submission.metrics.keys())
+    if submission.per_class_metrics:
+        all_metric_names |= set(submission.per_class_metrics.keys())
+
     registered_metrics = (
-        db.query(Metric).filter(Metric.name.in_(submitted_metric_names)).all()
+        db.query(Metric).filter(Metric.name.in_(all_metric_names)).all()
     )
-    registered_names = {m.name for m in registered_metrics}
-    unknown = submitted_metric_names - registered_names
+    metric_map = {m.name: m for m in registered_metrics}
+
+    # Check for unknown metrics
+    unknown = all_metric_names - set(metric_map.keys())
     if unknown:
         raise HTTPException(
             422,
             detail=f"Unknown metric(s): {', '.join(sorted(unknown))}. Register them first.",
         )
+
+    # Validate scalar metrics are not per-class
+    for name in submission.metrics:
+        if metric_map[name].is_per_class:
+            raise HTTPException(
+                422,
+                detail=f"Metric '{name}' is a per-class metric and cannot be submitted as a scalar. Use per_class_metrics instead.",
+            )
+
+    # Validate per-class metrics
+    if submission.per_class_metrics:
+        # Check each per-class metric is actually per-class
+        for name in submission.per_class_metrics:
+            if not metric_map[name].is_per_class:
+                raise HTTPException(
+                    422,
+                    detail=f"Metric '{name}' is not a per-class metric. Submit it in metrics instead.",
+                )
+
+        # Check dataset version has class_names
+        if not dataset_version.class_names:
+            raise HTTPException(
+                422,
+                detail="Dataset version does not define class names. Cannot submit per-class metrics.",
+            )
+
+        expected_classes = set(dataset_version.class_names)
+        for metric_name, class_values in submission.per_class_metrics.items():
+            submitted_classes = set(class_values.keys())
+            if submitted_classes != expected_classes:
+                missing = expected_classes - submitted_classes
+                extra = submitted_classes - expected_classes
+                parts = []
+                if missing:
+                    parts.append(f"missing: {', '.join(sorted(missing))}")
+                if extra:
+                    parts.append(f"extra: {', '.join(sorted(extra))}")
+                raise HTTPException(
+                    422,
+                    detail=f"Class name mismatch for metric '{metric_name}': {'; '.join(parts)}. "
+                           f"Expected: {sorted(expected_classes)}",
+                )
 
     # Upsert model version
     model_version = (
@@ -124,10 +171,20 @@ def submit_run(submission: RunSubmission, db: Session = Depends(get_db)):
     db.add(run)
     db.flush()
 
-    # Create run metrics
-    metric_map = {m.name: m for m in registered_metrics}
+    # Create scalar run metrics
     for metric_name, value in submission.metrics.items():
         db.add(RunMetric(run_id=run.id, metric_id=metric_map[metric_name].id, value=value))
+
+    # Create per-class run metrics
+    if submission.per_class_metrics:
+        for metric_name, class_values in submission.per_class_metrics.items():
+            for class_name, value in class_values.items():
+                db.add(RunClassMetric(
+                    run_id=run.id,
+                    metric_id=metric_map[metric_name].id,
+                    class_name=class_name,
+                    value=value,
+                ))
 
     db.commit()
     db.refresh(run)
